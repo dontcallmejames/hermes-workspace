@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
+// YAxisLeft = messages (larger values), YAxisRight = sessions (smaller values)
 
 
 // Dashboard fetches via workspace proxy routes (relative URLs work from any client)
@@ -206,6 +207,7 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
   const chartData = useMemo(() => {
     const dayMap = new Map<string, { sessions: number; messages: number }>()
     const now = Date.now() / 1000
+    // Use 14 days but trim leading empty days so the chart isn't wasted
     for (let i = 13; i >= 0; i--) {
       const d = new Date((now - i * 86400) * 1000)
       const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -221,7 +223,11 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
         entry.messages += s.message_count ?? 0
       }
     }
-    return Array.from(dayMap.entries()).map(([date, data]) => ({ date, ...data }))
+    const all = Array.from(dayMap.entries()).map(([date, data]) => ({ date, ...data }))
+    // Trim leading empty days so active days fill the chart
+    let firstActive = all.findIndex(d => d.sessions > 0 || d.messages > 0)
+    if (firstActive > 0) firstActive = Math.max(0, firstActive - 1) // keep 1 empty day before
+    return firstActive > 0 ? all.slice(firstActive) : all
   }, [sessions])
 
   return (
@@ -241,10 +247,11 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#22c55e' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#6366f1' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
             <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', fontSize: '11px' }} labelStyle={{ color: '#888', fontSize: '10px' }} />
-            <Area type="monotone" dataKey="messages" stroke="#22c55e" fill="url(#g-messages)" strokeWidth={1.5} dot={false} />
-            <Area type="monotone" dataKey="sessions" stroke="#6366f1" fill="url(#g-sessions)" strokeWidth={2} dot={false} />
+            <Area yAxisId="left" type="monotone" dataKey="messages" stroke="#22c55e" fill="url(#g-messages)" strokeWidth={1.5} dot={false} />
+            <Area yAxisId="right" type="monotone" dataKey="sessions" stroke="#6366f1" fill="url(#g-sessions)" strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
