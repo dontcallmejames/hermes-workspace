@@ -24,7 +24,7 @@ export const Route = createFileRoute('/api/terminal-stream')({
         const csrfCheck = requireJsonContentType(request)
         if (csrfCheck) return csrfCheck
         const ip = getClientIp(request)
-        if (!rateLimit(`terminal-stream:${ip}`, 10, 60_000)) {
+        if (!rateLimit(`terminal-stream:${ip}`, 30, 60_000)) {
           return rateLimitResponse()
         }
 

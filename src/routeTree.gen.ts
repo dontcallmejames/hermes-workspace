@@ -45,6 +45,7 @@ import { Route as ApiEventsRouteImport } from './routes/api/events'
 import { Route as ApiDebugAnalyzeRouteImport } from './routes/api/debug-analyze'
 import { Route as ApiContextUsageRouteImport } from './routes/api/context-usage'
 import { Route as ApiConnectionStatusRouteImport } from './routes/api/connection-status'
+import { Route as ApiConfigRouteImport } from './routes/api/config'
 import { Route as ApiChatEventsRouteImport } from './routes/api/chat-events'
 import { Route as ApiAuthCheckRouteImport } from './routes/api/auth-check'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
@@ -238,6 +239,11 @@ const ApiConnectionStatusRoute = ApiConnectionStatusRouteImport.update({
   path: '/api/connection-status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiConfigRoute = ApiConfigRouteImport.update({
+  id: '/api/config',
+  path: '/api/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatEventsRoute = ApiChatEventsRouteImport.update({
   id: '/api/chat-events',
   path: '/api/chat-events',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
   '/api/chat-events': typeof ApiChatEventsRoute
+  '/api/config': typeof ApiConfigRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
   '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
   '/api/chat-events': typeof ApiChatEventsRoute
+  '/api/config': typeof ApiConfigRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
   '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/api/auth': typeof ApiAuthRoute
   '/api/auth-check': typeof ApiAuthCheckRoute
   '/api/chat-events': typeof ApiChatEventsRoute
+  '/api/config': typeof ApiConfigRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
   '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/auth'
     | '/api/auth-check'
     | '/api/chat-events'
+    | '/api/config'
     | '/api/connection-status'
     | '/api/context-usage'
     | '/api/debug-analyze'
@@ -514,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/auth'
     | '/api/auth-check'
     | '/api/chat-events'
+    | '/api/config'
     | '/api/connection-status'
     | '/api/context-usage'
     | '/api/debug-analyze'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/api/auth'
     | '/api/auth-check'
     | '/api/chat-events'
+    | '/api/config'
     | '/api/connection-status'
     | '/api/context-usage'
     | '/api/debug-analyze'
@@ -615,6 +627,7 @@ export interface RootRouteChildren {
   ApiAuthRoute: typeof ApiAuthRoute
   ApiAuthCheckRoute: typeof ApiAuthCheckRoute
   ApiChatEventsRoute: typeof ApiChatEventsRoute
+  ApiConfigRoute: typeof ApiConfigRoute
   ApiConnectionStatusRoute: typeof ApiConnectionStatusRoute
   ApiContextUsageRoute: typeof ApiContextUsageRoute
   ApiDebugAnalyzeRoute: typeof ApiDebugAnalyzeRoute
@@ -902,6 +915,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiConnectionStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/config': {
+      id: '/api/config'
+      path: '/api/config'
+      fullPath: '/api/config'
+      preLoaderRoute: typeof ApiConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat-events': {
       id: '/api/chat-events'
       path: '/api/chat-events'
@@ -1042,6 +1062,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthRoute: ApiAuthRoute,
   ApiAuthCheckRoute: ApiAuthCheckRoute,
   ApiChatEventsRoute: ApiChatEventsRoute,
+  ApiConfigRoute: ApiConfigRoute,
   ApiConnectionStatusRoute: ApiConnectionStatusRoute,
   ApiContextUsageRoute: ApiContextUsageRoute,
   ApiDebugAnalyzeRoute: ApiDebugAnalyzeRoute,

@@ -11,10 +11,46 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { listSessions, getConfig } from '@/server/hermes-api'
-import { chatQueryKeys } from '@/screens/chat/chat-queries'
 import { getCapabilities } from '@/server/gateway-capabilities'
-import type { HermesSession } from '@/server/hermes-api'
+
+// Dashboard fetches via workspace proxy routes (relative URLs work from any client)
+// so we don't hit 127.0.0.1:8642 directly from remote browsers.
+
+async function fetchDashboardSessions(): Promise<Array<HermesSession>> {
+  const res = await fetch('/api/sessions?limit=100&offset=0')
+  if (!res.ok) return []
+  const data = (await res.json()) as { sessions?: Array<Record<string, unknown>> }
+  // Map workspace proxy summary format back to HermesSession-compatible shape
+  return (data.sessions ?? []).map((s) => ({
+    id: (s.key ?? s.friendlyId ?? s.id) as string,
+    title: (s.title ?? s.label ?? null) as string | null,
+    model: (s.model ?? null) as string | null,
+    started_at: s.startedAt ? (s.startedAt as number) / 1000 : s.started_at as number | undefined,
+    input_tokens: (s.usage as Record<string, number> | undefined)?.promptTokens ?? 0,
+    output_tokens: (s.usage as Record<string, number> | undefined)?.completionTokens ?? 0,
+    message_count: (s.message_count ?? 0) as number,
+    tool_call_count: (s.tool_call_count ?? 0) as number,
+  }))
+}
+
+async function fetchDashboardConfig(): Promise<Record<string, unknown>> {
+  const res = await fetch('/api/config')
+  if (!res.ok) return {}
+  return (await res.json()) as Record<string, unknown>
+}
+
+type HermesSession = {
+  id: string
+  title?: string | null
+  model?: string | null
+  started_at?: number
+  input_tokens?: number
+  output_tokens?: number
+  message_count?: number
+  tool_call_count?: number
+}
+
+const chatQueryKeys = { sessions: ['chat', 'sessions'] as const }
 import { cn } from '@/lib/utils'
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -214,7 +250,7 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
 // ── Model Card ───────────────────────────────────────────────────
 
 function ModelCard() {
-  const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: getConfig, staleTime: 30_000 })
+  const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: fetchDashboardConfig, staleTime: 30_000 })
   const caps = getCapabilities()
   const config = configQuery.data as Record<string, unknown> | undefined
   const modelName = config ? resolveModelName(config) : '—'
@@ -354,8 +390,8 @@ function SessionRow({ session, maxTokens, onClick }: {
 
 export function DashboardScreen() {
   const navigate = useNavigate()
-  const sessionsQuery = useQuery({ queryKey: chatQueryKeys.sessions, queryFn: () => listSessions(50, 0), staleTime: 10_000 })
-  const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: getConfig, staleTime: 30_000 })
+  const sessionsQuery = useQuery({ queryKey: chatQueryKeys.sessions, queryFn: fetchDashboardSessions, staleTime: 10_000 })
+  const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: fetchDashboardConfig, staleTime: 30_000 })
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
   const config = configQuery.data as Record<string, unknown> | undefined
