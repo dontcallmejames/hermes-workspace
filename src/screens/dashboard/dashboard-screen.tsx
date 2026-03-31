@@ -59,7 +59,7 @@ type HermesSession = {
   tool_call_count?: number
 }
 
-const chatQueryKeys = { sessions: ['chat', 'sessions'] as const }
+
 import { cn } from '@/lib/utils'
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -408,7 +408,10 @@ function SessionRow({ session, maxTokens, onClick }: {
 
 export function DashboardScreen() {
   const navigate = useNavigate()
-  const sessionsQuery = useQuery({ queryKey: chatQueryKeys.sessions, queryFn: fetchDashboardSessions, staleTime: 10_000 })
+  // Use a SEPARATE query key from chatQueryKeys.sessions — the chat sidebar
+  // shares that key and overwrites it with a format that lacks message_count,
+  // which flattens the activity chart immediately after first load.
+  const sessionsQuery = useQuery({ queryKey: ['dashboard', 'sessions'], queryFn: fetchDashboardSessions, staleTime: 10_000, refetchInterval: 60_000 })
   const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: fetchDashboardConfig, staleTime: 30_000 })
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
