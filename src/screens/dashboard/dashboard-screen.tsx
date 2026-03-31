@@ -19,6 +19,48 @@ import { cn } from '@/lib/utils'
 
 // ── Helpers ──────────────────────────────────────────────────────
 
+/**
+ * Resolve model name from config — handles both flat string and nested object.
+ * Webapi returns: { model: "claude-sonnet-4-6", provider: "anthropic" }
+ * Some builds return: { model: { default: "...", provider: "..." } }
+ */
+function resolveModelName(config: Record<string, unknown>): string {
+  const m = config?.model
+  if (typeof m === 'string') return m
+  if (m && typeof m === 'object') {
+    const mb = m as Record<string, unknown>
+    return (mb.default ?? mb.name ?? '') as string
+  }
+  return '—'
+}
+
+function resolveProvider(config: Record<string, unknown>): string {
+  const m = config?.model
+  if (m && typeof m === 'object') {
+    const mb = m as Record<string, unknown>
+    if (mb.provider) return mb.provider as string
+  }
+  return (config?.provider ?? '—') as string
+}
+
+/**
+ * Rough cost estimate using real per-model pricing.
+ * Input tokens ~$3/M, output ~$15/M for sonnet. Weighted 80/20.
+ */
+function estimateCost(totalTokens: number, modelName: string): string {
+  let ratePerMillion = 4 // default blended rate
+  const m = modelName.toLowerCase()
+  if (m.includes('opus')) ratePerMillion = 22
+  else if (m.includes('sonnet')) ratePerMillion = 5
+  else if (m.includes('haiku')) ratePerMillion = 0.5
+  else if (m.includes('gpt-4o')) ratePerMillion = 7
+  else if (m.includes('gpt-4')) ratePerMillion = 15
+  else if (m.includes('gpt-3.5')) ratePerMillion = 0.5
+  const cost = (totalTokens / 1_000_000) * ratePerMillion
+  if (cost < 0.01) return '<$0.01'
+  return `~$${cost.toFixed(2)}`
+}
+
 function timeAgo(ts: number): string {
   const diff = Date.now() / 1000 - ts
   if (diff < 60) return 'just now'
@@ -175,10 +217,10 @@ function ModelCard() {
   const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: getConfig, staleTime: 30_000 })
   const caps = getCapabilities()
   const config = configQuery.data as Record<string, unknown> | undefined
+  const modelName = config ? resolveModelName(config) : '—'
+  const provider = config ? resolveProvider(config) : '—'
   const modelBlock = config?.model as Record<string, unknown> | undefined
-  const modelName = (modelBlock?.default ?? config?.model ?? '—') as string
-  const provider = (modelBlock?.provider ?? config?.provider ?? '—') as string
-  const baseUrl = (modelBlock?.base_url ?? config?.base_url ?? '') as string
+  const baseUrl = (typeof modelBlock === 'object' && modelBlock ? modelBlock.base_url : config?.base_url ?? '') as string
   const connected = caps?.sessions === true
   const fallbackBlock = config?.fallback_model as Record<string, unknown> | undefined
   const fallbackModel = fallbackBlock?.model as string | undefined
@@ -317,9 +359,8 @@ export function DashboardScreen() {
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
   const config = configQuery.data as Record<string, unknown> | undefined
-  const modelBlock = config?.model as Record<string, unknown> | undefined
-  const modelName = (modelBlock?.default ?? config?.model ?? '—') as string
-  const provider = (modelBlock?.provider ?? config?.provider ?? '—') as string
+  const modelName = config ? resolveModelName(config) : '—'
+  const provider = config ? resolveProvider(config) : '—'
   const caps = getCapabilities()
   const connected = caps?.sessions === true
 
@@ -343,7 +384,7 @@ export function DashboardScreen() {
     return max
   }, [recentSessions])
 
-  const costEstimate = `~$${((stats.totalTokens / 1_000_000) * 5).toFixed(2)}`
+  const costEstimate = estimateCost(stats.totalTokens, modelName)
 
   return (
     <div className="min-h-full px-4 py-4 md:px-8 md:py-6 lg:px-10 space-y-5 pb-28">
@@ -354,7 +395,7 @@ export function DashboardScreen() {
           alt="Hermes"
           className="size-12 md:size-14 rounded-xl shadow-md shadow-indigo-500/10 border border-[var(--theme-border)]"
         />
-        <h1 className="text-sm font-semibold text-ink tracking-wide">Hermes Workspace</h1>
+        <h1 className="text-sm font-semibold text-ink tracking-wide">Kaylee</h1>
         <div className="flex items-center gap-2 mt-1">
           <QuickAction label="New Chat" icon="💬" accentColor="#6366f1" onClick={() => navigate({ to: '/chat/$sessionKey', params: { sessionKey: 'new' } })} />
           <QuickAction label="Terminal" icon="💻" accentColor="#22c55e" onClick={() => navigate({ to: '/terminal' })} />
