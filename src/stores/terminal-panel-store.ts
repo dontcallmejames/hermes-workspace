@@ -157,6 +157,13 @@ export const useTerminalPanelStore = create<TerminalPanelState>()(
             state.terminalCounter += 1
             return
           }
+          // Clear stale session IDs from previous workspace instances —
+          // PTY sessions don't survive page reloads, so old IDs cause silent failures
+          state.tabs = state.tabs.map((tab) => ({
+            ...tab,
+            sessionId: null,
+            status: 'idle' as const,
+          }))
           const activeExists = state.tabs.some(
             (tab) => tab.id === state.activeTabId,
           )

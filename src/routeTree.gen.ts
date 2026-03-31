@@ -42,6 +42,7 @@ import { Route as ApiHermesConfigRouteImport } from './routes/api/hermes-config'
 import { Route as ApiGatewayStatusRouteImport } from './routes/api/gateway-status'
 import { Route as ApiFilesRouteImport } from './routes/api/files'
 import { Route as ApiEventsRouteImport } from './routes/api/events'
+import { Route as ApiDebugAnalyzeRouteImport } from './routes/api/debug-analyze'
 import { Route as ApiContextUsageRouteImport } from './routes/api/context-usage'
 import { Route as ApiConnectionStatusRouteImport } from './routes/api/connection-status'
 import { Route as ApiChatEventsRouteImport } from './routes/api/chat-events'
@@ -222,6 +223,11 @@ const ApiEventsRoute = ApiEventsRouteImport.update({
   path: '/api/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDebugAnalyzeRoute = ApiDebugAnalyzeRouteImport.update({
+  id: '/api/debug-analyze',
+  path: '/api/debug-analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiContextUsageRoute = ApiContextUsageRouteImport.update({
   id: '/api/context-usage',
   path: '/api/context-usage',
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/api/chat-events': typeof ApiChatEventsRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
+  '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
   '/api/events': typeof ApiEventsRoute
   '/api/files': typeof ApiFilesRoute
   '/api/gateway-status': typeof ApiGatewayStatusRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/api/chat-events': typeof ApiChatEventsRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
+  '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
   '/api/events': typeof ApiEventsRoute
   '/api/files': typeof ApiFilesRoute
   '/api/gateway-status': typeof ApiGatewayStatusRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/api/chat-events': typeof ApiChatEventsRoute
   '/api/connection-status': typeof ApiConnectionStatusRoute
   '/api/context-usage': typeof ApiContextUsageRoute
+  '/api/debug-analyze': typeof ApiDebugAnalyzeRoute
   '/api/events': typeof ApiEventsRoute
   '/api/files': typeof ApiFilesRoute
   '/api/gateway-status': typeof ApiGatewayStatusRoute
@@ -458,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/chat-events'
     | '/api/connection-status'
     | '/api/context-usage'
+    | '/api/debug-analyze'
     | '/api/events'
     | '/api/files'
     | '/api/gateway-status'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/api/chat-events'
     | '/api/connection-status'
     | '/api/context-usage'
+    | '/api/debug-analyze'
     | '/api/events'
     | '/api/files'
     | '/api/gateway-status'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/api/chat-events'
     | '/api/connection-status'
     | '/api/context-usage'
+    | '/api/debug-analyze'
     | '/api/events'
     | '/api/files'
     | '/api/gateway-status'
@@ -605,6 +617,7 @@ export interface RootRouteChildren {
   ApiChatEventsRoute: typeof ApiChatEventsRoute
   ApiConnectionStatusRoute: typeof ApiConnectionStatusRoute
   ApiContextUsageRoute: typeof ApiContextUsageRoute
+  ApiDebugAnalyzeRoute: typeof ApiDebugAnalyzeRoute
   ApiEventsRoute: typeof ApiEventsRoute
   ApiFilesRoute: typeof ApiFilesRoute
   ApiGatewayStatusRoute: typeof ApiGatewayStatusRoute
@@ -868,6 +881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/debug-analyze': {
+      id: '/api/debug-analyze'
+      path: '/api/debug-analyze'
+      fullPath: '/api/debug-analyze'
+      preLoaderRoute: typeof ApiDebugAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/context-usage': {
       id: '/api/context-usage'
       path: '/api/context-usage'
@@ -1024,6 +1044,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatEventsRoute: ApiChatEventsRoute,
   ApiConnectionStatusRoute: ApiConnectionStatusRoute,
   ApiContextUsageRoute: ApiContextUsageRoute,
+  ApiDebugAnalyzeRoute: ApiDebugAnalyzeRoute,
   ApiEventsRoute: ApiEventsRoute,
   ApiFilesRoute: ApiFilesRoute,
   ApiGatewayStatusRoute: ApiGatewayStatusRoute,
