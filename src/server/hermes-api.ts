@@ -256,6 +256,11 @@ export function toSessionSummary(session: HermesSession): Record<string, unknown
       completionTokens: session.output_tokens ?? 0,
       totalTokens: (session.input_tokens ?? 0) + (session.output_tokens ?? 0),
     },
+    // Pass through raw counts for dashboard activity chart
+    message_count: session.message_count ?? 0,
+    tool_call_count: session.tool_call_count ?? 0,
+    input_tokens: session.input_tokens ?? 0,
+    output_tokens: session.output_tokens ?? 0,
   }
 }
 

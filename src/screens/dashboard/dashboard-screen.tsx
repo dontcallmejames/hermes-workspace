@@ -21,16 +21,25 @@ async function fetchDashboardSessions(): Promise<Array<HermesSession>> {
   if (!res.ok) return []
   const data = (await res.json()) as { sessions?: Array<Record<string, unknown>> }
   // Map workspace proxy summary format back to HermesSession-compatible shape
-  return (data.sessions ?? []).map((s) => ({
-    id: (s.key ?? s.friendlyId ?? s.id) as string,
-    title: (s.title ?? s.label ?? null) as string | null,
-    model: (s.model ?? null) as string | null,
-    started_at: s.startedAt ? (s.startedAt as number) / 1000 : s.started_at as number | undefined,
-    input_tokens: (s.usage as Record<string, number> | undefined)?.promptTokens ?? 0,
-    output_tokens: (s.usage as Record<string, number> | undefined)?.completionTokens ?? 0,
-    message_count: (s.message_count ?? 0) as number,
-    tool_call_count: (s.tool_call_count ?? 0) as number,
-  }))
+  return (data.sessions ?? []).map((s) => {
+    const usage = s.usage as Record<string, number> | undefined
+    // startedAt comes in milliseconds from the proxy, convert to seconds
+    const started_at = s.startedAt
+      ? (s.startedAt as number) / 1000
+      : typeof s.started_at === 'number'
+        ? s.started_at
+        : undefined
+    return {
+      id: (s.key ?? s.friendlyId ?? s.id) as string,
+      title: (s.title ?? s.label ?? null) as string | null,
+      model: (s.model ?? null) as string | null,
+      started_at,
+      input_tokens: (s.input_tokens as number | undefined) ?? usage?.promptTokens ?? 0,
+      output_tokens: (s.output_tokens as number | undefined) ?? usage?.completionTokens ?? 0,
+      message_count: (s.message_count as number | undefined) ?? 0,
+      tool_call_count: (s.tool_call_count as number | undefined) ?? 0,
+    }
+  })
 }
 
 async function fetchDashboardConfig(): Promise<Record<string, unknown>> {
