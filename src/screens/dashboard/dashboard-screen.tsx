@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { getCapabilities } from '@/server/gateway-capabilities'
+
 
 // Dashboard fetches via workspace proxy routes (relative URLs work from any client)
 // so we don't hit 127.0.0.1:8642 directly from remote browsers.
@@ -217,8 +217,8 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
 
   return (
     <GlassCard title="Activity" titleRight={<span className="text-[10px] text-neutral-600">14 days</span>} accentColor="#6366f1" className="h-full">
-      <div className="h-[200px] w-full -ml-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[200px] w-full -ml-2" style={{ minHeight: 200, minWidth: 0 }}>
+        <ResponsiveContainer width="100%" height={200} minWidth={0}>
           <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="g-sessions" x1="0" y1="0" x2="0" y2="1">
@@ -251,13 +251,22 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
 
 function ModelCard() {
   const configQuery = useQuery({ queryKey: ['hermes-config'], queryFn: fetchDashboardConfig, staleTime: 30_000 })
-  const caps = getCapabilities()
+  const statusQuery = useQuery({
+    queryKey: ['gateway-status'],
+    queryFn: async () => {
+      const res = await fetch('/api/gateway-status')
+      if (!res.ok) return { capabilities: { sessions: false } }
+      return res.json() as Promise<{ capabilities: { sessions: boolean } }>
+    },
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  })
   const config = configQuery.data as Record<string, unknown> | undefined
   const modelName = config ? resolveModelName(config) : '—'
   const provider = config ? resolveProvider(config) : '—'
   const modelBlock = config?.model as Record<string, unknown> | undefined
   const baseUrl = (typeof modelBlock === 'object' && modelBlock ? modelBlock.base_url : config?.base_url ?? '') as string
-  const connected = caps?.sessions === true
+  const connected = statusQuery.data?.capabilities?.sessions === true
   const fallbackBlock = config?.fallback_model as Record<string, unknown> | undefined
   const fallbackModel = fallbackBlock?.model as string | undefined
 
@@ -397,8 +406,7 @@ export function DashboardScreen() {
   const config = configQuery.data as Record<string, unknown> | undefined
   const modelName = config ? resolveModelName(config) : '—'
   const provider = config ? resolveProvider(config) : '—'
-  const caps = getCapabilities()
-  const connected = caps?.sessions === true
+  const connected = sessionsQuery.isSuccess && !sessionsQuery.isError
 
   const stats = useMemo(() => {
     let totalMessages = 0, totalToolCalls = 0, totalTokens = 0

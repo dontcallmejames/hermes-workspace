@@ -24,7 +24,17 @@ export type TerminalSession = {
   close: () => void
 }
 
-const sessions = new Map<string, TerminalSession>()
+// Use globalThis to survive Vite HMR module re-evaluation in dev mode.
+// Each server route handler gets its own module instance, so a plain Map
+// would be a different object in terminal-stream vs terminal-input.
+// Storing on globalThis gives us a single shared Map across all instances.
+const _g = globalThis as typeof globalThis & {
+  __hermes_terminal_sessions?: Map<string, TerminalSession>
+}
+if (!_g.__hermes_terminal_sessions) {
+  _g.__hermes_terminal_sessions = new Map<string, TerminalSession>()
+}
+const sessions = _g.__hermes_terminal_sessions
 
 // Resolve path to pty-helper.py relative to this file
 const __dirname_resolved =
