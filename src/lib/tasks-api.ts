@@ -126,9 +126,11 @@ export const ASSIGNEE_LABELS: Record<string, string> = {
 
 export function isOverdue(task: HermesTask): boolean {
   if (!task.due_date) return false
-  // Compare date-only — due_date is a date string (no time), so we compare
-  // against start of today in local time to avoid UTC-vs-local offset issues.
-  const due = new Date(task.due_date)
+  // Parse YYYY-MM-DD manually to avoid UTC-vs-local offset issues.
+  // new Date("2026-04-02") parses as UTC midnight, which in EST is the
+  // previous evening — causing everything to appear one day early.
+  const [year, month, day] = task.due_date.split('-').map(Number)
+  const due = new Date(year, month - 1, day) // local midnight
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return due < today

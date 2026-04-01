@@ -77,7 +77,10 @@ export function TaskCard({ task, onClick, onDragStart, isDragging }: Props) {
               </>
             )}
             <span className={overdue ? 'text-red-400 font-semibold' : 'text-[var(--theme-muted)]'}>
-              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {(() => {
+                const [y, m, d] = task.due_date!.split('-').map(Number)
+                return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              })()}
             </span>
           </div>
         )}
