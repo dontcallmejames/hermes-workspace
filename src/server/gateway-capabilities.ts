@@ -17,8 +17,8 @@ export const HERMES_UPGRADE_INSTRUCTIONS =
 export const SESSIONS_API_UNAVAILABLE_MESSAGE =
   `Your Hermes gateway does not support the sessions API. ${HERMES_UPGRADE_INSTRUCTIONS}`
 
-const PROBE_TIMEOUT_MS = 3_000
-const PROBE_TTL_MS = 30_000
+const PROBE_TIMEOUT_MS = 2_000
+const PROBE_TTL_MS = 120_000
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -82,27 +82,16 @@ async function probe(path: string): Promise<boolean> {
 
 /** Probe /v1/chat/completions with OPTIONS to avoid sending real chat */
 async function probeChatCompletions(): Promise<boolean> {
+  // Use a simple GET/HEAD probe — avoids double-request fallback that can
+  // cause 2x timeout delays when the endpoint doesn't exist.
   try {
     const res = await fetch(`${HERMES_API}/v1/chat/completions`, {
-      method: 'OPTIONS',
+      method: 'HEAD',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     })
-    // Any non-connection-error response means the endpoint exists
     return res.status !== 404
   } catch {
-    // OPTIONS might not be supported — try POST with empty body
-    try {
-      const res = await fetch(`${HERMES_API}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-        signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-      })
-      // 400/422 = endpoint exists but bad request. 404 = doesn't exist.
-      return res.status !== 404
-    } catch {
-      return false
-    }
+    return false
   }
 }
 
