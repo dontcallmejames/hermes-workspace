@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -47,6 +48,10 @@ export function TasksScreen() {
   const [dragOverColumn, setDragOverColumn] = useState<TaskColumn | null>(null)
   const [showDone, setShowDone] = useState(false)
 
+  const search = useSearch({ from: '/tasks' })
+  const initialAssignee = typeof search.assignee === 'string' ? search.assignee : null
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(initialAssignee)
+
   const tasksQuery = useQuery({
     queryKey: [...QUERY_KEY, showDone],
     queryFn: () => fetchTasks({ include_done: showDone }),
@@ -60,13 +65,14 @@ export function TasksScreen() {
       backlog: [], todo: [], in_progress: [], review: [], done: [],
     }
     for (const t of tasks) {
+      if (assigneeFilter && t.assignee !== assigneeFilter) continue
       if (map[t.column]) map[t.column].push(t)
     }
     for (const col of COLUMN_ORDER) {
       map[col].sort((a, b) => a.position - b.position)
     }
     return map
-  }, [tasks])
+  }, [tasks, assigneeFilter])
 
   const stats = useMemo(() => {
     const total = tasks.length
@@ -139,6 +145,18 @@ export function TasksScreen() {
       <div className="flex items-center justify-between border-b border-[var(--theme-border)] px-4 py-3 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <h1 className="text-base font-semibold text-[var(--theme-text)] shrink-0">Tasks</h1>
+          {assigneeFilter && (
+            <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)]">
+              <span>Filtered by: <span className="capitalize" style={{ color: '#f59e0b' }}>{assigneeFilter}</span></span>
+              <button
+                type="button"
+                onClick={() => setAssigneeFilter(null)}
+                className="text-[var(--theme-muted)] hover:text-[var(--theme-text)] transition-colors"
+              >
+                ✕ Clear
+              </button>
+            </div>
+          )}
           {/* Stats: always visible, condensed on mobile */}
           <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)] flex-wrap">
             <span>{stats.total} total</span>
