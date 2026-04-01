@@ -5,6 +5,7 @@ import {
   ArrowRight01Icon,
   BrainIcon,
   Chat01Icon,
+  CheckListIcon,
   Clock01Icon,
   ComputerTerminal01Icon,
   DashboardSquare01Icon,
@@ -783,6 +784,13 @@ function ChatSidebarComponent({
       label: 'Jobs',
       active: isJobsActive,
     },
+    {
+      kind: 'link' as const,
+      to: '/tasks',
+      icon: CheckListIcon,
+      label: 'Tasks',
+      active: pathname.startsWith('/tasks'),
+    },
   ]
 
   const knowledgeItems: Array<NavItemDef> = [
@@ -849,7 +857,7 @@ function ChatSidebarComponent({
                 )}
               >
                 <img src="/hermes-avatar.webp" alt="Hermes" className="size-6 rounded-lg" />
-                <span className="text-sm font-semibold tracking-tight" style={{ color: 'var(--theme-text)' }}>Hermes Workspace</span>
+                <span className="text-sm font-semibold tracking-tight" style={{ color: 'var(--theme-text)' }}>Kaylee</span>
               </Link>
             </motion.div>
           ) : null}
