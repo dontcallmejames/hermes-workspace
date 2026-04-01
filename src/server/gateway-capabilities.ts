@@ -36,6 +36,7 @@ export type EnhancedCapabilities = {
   memory: boolean
   config: boolean
   jobs: boolean
+  tasks: boolean
 }
 
 /** Full capabilities — backward compat with existing code */
@@ -57,6 +58,7 @@ let capabilities: GatewayCapabilities = {
   memory: false,
   config: false,
   jobs: false,
+  tasks: false,
   probed: false,
 }
 
@@ -105,7 +107,7 @@ async function probeChatCompletions(): Promise<boolean> {
 }
 
 // APIs that are optional and do not warrant an upgrade warning when absent.
-const OPTIONAL_APIS = new Set(['jobs', 'chatCompletions', 'streaming'])
+const OPTIONAL_APIS = new Set(['jobs', 'tasks', 'chatCompletions', 'streaming'])
 
 function logCapabilities(next: GatewayCapabilities): void {
   const core: Array<string> = []
@@ -113,7 +115,7 @@ function logCapabilities(next: GatewayCapabilities): void {
   const missing: Array<string> = []
 
   const coreKeys: Array<keyof CoreCapabilities> = ['health', 'chatCompletions', 'models', 'streaming']
-  const enhancedKeys: Array<keyof EnhancedCapabilities> = ['sessions', 'skills', 'memory', 'config', 'jobs']
+  const enhancedKeys: Array<keyof EnhancedCapabilities> = ['sessions', 'skills', 'memory', 'config', 'jobs', 'tasks']
 
   for (const key of coreKeys) {
     if (key === 'probed') continue
@@ -170,7 +172,7 @@ export async function probeGateway(options?: {
       }
     }
 
-    const [health, chatCompletions, models, sessions, skills, memory, config, jobs] =
+    const [health, chatCompletions, models, sessions, skills, memory, config, jobs, tasks] =
       await Promise.all([
         probe('/health'),
         probeChatCompletions(),
@@ -180,6 +182,7 @@ export async function probeGateway(options?: {
         probe('/api/memory'),
         probe('/api/config'),
         probe('/api/jobs'),
+        probe('/api/tasks'),
       ])
 
     capabilities = {
@@ -195,6 +198,7 @@ export async function probeGateway(options?: {
       memory,
       config,
       jobs,
+      tasks,
     }
     lastProbeAt = Date.now()
     logCapabilities(capabilities)
@@ -242,6 +246,7 @@ export function getEnhancedCapabilities(): EnhancedCapabilities {
     memory: capabilities.memory,
     config: capabilities.config,
     jobs: capabilities.jobs,
+    tasks: capabilities.tasks,
   }
 }
 
