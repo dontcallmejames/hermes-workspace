@@ -232,6 +232,12 @@ If `tasks` capability is false, the Tasks tab shows an upgrade prompt.
 
 ---
 
+## Design Polish Pass
+
+After the initial implementation is functional, run the kanban screen through the `frontend-design` skill to ensure visual consistency with the rest of hermes-workspace — colors, spacing, card styling, typography, dark theme tokens, hover states, and mobile responsiveness. This is a mandatory step before the feature is considered complete.
+
+---
+
 ## Out of Scope (Future)
 
 - Multiple boards (Projects board) — separate spec
