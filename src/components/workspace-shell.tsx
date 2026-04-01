@@ -99,6 +99,7 @@ export function WorkspaceShell() {
     if (path.startsWith('/files')) return 2
     if (path.startsWith('/terminal')) return 3
     if (path.startsWith('/jobs')) return 4
+    if (path.startsWith('/crew')) return 9
     if (path.startsWith('/tasks')) return 5
     if (path.startsWith('/memory')) return 6
     if (path.startsWith('/skills')) return 7
@@ -128,6 +129,7 @@ export function WorkspaceShell() {
     if (pathname.startsWith('/terminal')) return 'Terminal'
     if (pathname.startsWith('/files')) return 'Files'
     if (pathname.startsWith('/jobs')) return 'Jobs'
+    if (pathname.startsWith('/crew')) return 'Crew'
     if (pathname.startsWith('/tasks')) return 'Tasks'
     if (pathname.startsWith('/memory')) return 'Memory'
     if (pathname.startsWith('/skills')) return 'Skills'
