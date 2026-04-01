@@ -31,7 +31,9 @@
     "@tanstack/react-router-ssr-query": "^1.131.7",
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/react-grid-layout": "^1.3.6",
+    "better-sqlite3": "^12.8.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "marked": "^17.0.1",
@@ -76,4 +78,3 @@
     "web-vitals": "^5.1.0"
   }
 }
-
