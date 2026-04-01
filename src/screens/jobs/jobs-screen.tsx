@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -294,6 +295,10 @@ export function JobsScreen() {
   const [showCreate, setShowCreate] = useState(false)
   const [editingJob, setEditingJob] = useState<HermesJob | null>(null)
 
+  const routeSearch = useSearch({ from: '/jobs' })
+  const initialAgent = typeof routeSearch.agent === 'string' ? routeSearch.agent : null
+  const [agentFilter, setAgentFilter] = useState<string | null>(initialAgent)
+
   const jobsQuery = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchJobs,
@@ -366,13 +371,21 @@ export function JobsScreen() {
   })
 
   const filteredJobs = useMemo(() => {
-    const jobs = jobsQuery.data ?? []
+    let jobs = jobsQuery.data ?? []
+    if (agentFilter) {
+      const needle = agentFilter.toLowerCase()
+      jobs = jobs.filter(
+        (j) =>
+          (j.name ?? '').toLowerCase().includes(needle) ||
+          (j.prompt ?? '').toLowerCase().includes(needle),
+      )
+    }
     if (!search.trim()) return jobs
     const q = search.toLowerCase()
     return jobs.filter(
       (j) => j.name?.toLowerCase().includes(q) || j.prompt?.toLowerCase().includes(q),
     )
-  }, [jobsQuery.data, search])
+  }, [jobsQuery.data, search, agentFilter])
 
   const handleCreate = useCallback(
     async (input: {
@@ -402,6 +415,18 @@ export function JobsScreen() {
             <span className="ml-1 text-xs text-[var(--theme-muted)]">
               ({jobsQuery.data.length})
             </span>
+          )}
+          {agentFilter && (
+            <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)]">
+              <span>Agent: <span className="capitalize" style={{ color: '#f59e0b' }}>{agentFilter}</span></span>
+              <button
+                type="button"
+                onClick={() => setAgentFilter(null)}
+                className="text-[var(--theme-muted)] hover:text-[var(--theme-text)] transition-colors"
+              >
+                ✕ Clear
+              </button>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2">
