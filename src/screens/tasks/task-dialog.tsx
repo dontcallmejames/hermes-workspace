@@ -75,7 +75,10 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
 
   return (
     <DialogRoot open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(520px,95vw)] border-[var(--theme-border)] bg-[var(--theme-bg)]">
+      <DialogContent className="w-[min(520px,95vw)] border-[var(--theme-border)] bg-[var(--theme-bg)] overflow-hidden">
+        {/* Accent top border */}
+        <div className="h-[3px] w-full" style={{ background: 'var(--theme-accent)' }} />
+
         <div className="p-5">
           <DialogTitle className="text-base font-semibold text-[var(--theme-text)] mb-1">
             {isEdit ? 'Edit Task' : 'New Task'}
@@ -113,6 +116,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
                 <label className={labelClass}>Column</label>
                 <select
                   className={inputClass}
+                  style={{ colorScheme: 'dark' }}
                   value={column}
                   onChange={e => setColumn(e.target.value as TaskColumn)}
                 >
@@ -125,6 +129,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
                 <label className={labelClass}>Priority</label>
                 <select
                   className={inputClass}
+                  style={{ colorScheme: 'dark' }}
                   value={priority}
                   onChange={e => setPriority(e.target.value as TaskPriority)}
                 >
@@ -140,6 +145,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
                 <label className={labelClass}>Assignee</label>
                 <select
                   className={inputClass}
+                  style={{ colorScheme: 'dark' }}
                   value={assignee}
                   onChange={e => setAssignee(e.target.value as TaskAssignee | '')}
                 >
@@ -154,6 +160,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
                 <input
                   type="date"
                   className={inputClass}
+                  style={{ colorScheme: 'dark' }}
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
                 />
@@ -170,24 +177,27 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, onSubmit, 
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSubmitting || !title.trim()}
-                style={{ background: 'var(--theme-accent)', color: 'white' }}
-              >
-                {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Task'}
-              </Button>
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-[10px] text-[var(--theme-muted)]">Press Esc to cancel</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting || !title.trim()}
+                  style={{ background: 'var(--theme-accent)', color: 'white' }}
+                >
+                  {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Task'}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

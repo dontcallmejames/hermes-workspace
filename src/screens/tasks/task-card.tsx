@@ -12,6 +12,8 @@ type Props = {
 export function TaskCard({ task, onClick, onDragStart, isDragging }: Props) {
   const overdue = isOverdue(task)
   const priorityColor = PRIORITY_COLORS[task.priority]
+  const visibleTags = task.tags.slice(0, 2)
+  const extraTagCount = task.tags.length - 2
 
   return (
     <div
@@ -19,14 +21,21 @@ export function TaskCard({ task, onClick, onDragStart, isDragging }: Props) {
       onDragStart={onDragStart}
       onClick={onClick}
       className={cn(
-        'rounded-lg border p-3 cursor-pointer transition-all select-none',
-        'bg-[var(--theme-card)] hover:bg-[var(--theme-card2)]',
-        'border-[var(--theme-border)] hover:border-[var(--theme-accent)]',
-        isDragging && 'opacity-40',
+        'relative rounded-lg border p-3 cursor-pointer transition-all select-none',
+        'bg-[var(--theme-card)] border-[var(--theme-border)]',
+        'hover:border-[var(--theme-accent)]',
+        isDragging ? 'opacity-40 rotate-1 shadow-2xl' : 'hover:shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: priorityColor }}
     >
-      <p className="text-sm font-medium text-[var(--theme-text)] leading-snug mb-1 line-clamp-2">
+      {/* Priority dot in top-right */}
+      <span
+        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0"
+        style={{ background: priorityColor }}
+        title={`Priority: ${task.priority}`}
+      />
+
+      <p className="text-sm font-medium text-[var(--theme-text)] leading-snug mb-1 line-clamp-2 pr-4">
         {task.title}
       </p>
 
@@ -43,7 +52,7 @@ export function TaskCard({ task, onClick, onDragStart, isDragging }: Props) {
               {ASSIGNEE_LABELS[task.assignee] ?? task.assignee}
             </span>
           )}
-          {task.tags.slice(0, 2).map((tag) => (
+          {visibleTags.map((tag) => (
             <span
               key={tag}
               className="text-[10px] px-1.5 py-0.5 rounded-md bg-[var(--theme-hover)] text-[var(--theme-muted)]"
@@ -51,18 +60,26 @@ export function TaskCard({ task, onClick, onDragStart, isDragging }: Props) {
               {tag}
             </span>
           ))}
+          {extraTagCount > 0 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[var(--theme-hover)] text-[var(--theme-muted)]">
+              +{extraTagCount} more
+            </span>
+          )}
         </div>
 
         {task.due_date && (
-          <span
-            className={cn(
-              'text-[10px] tabular-nums',
-              overdue ? 'text-red-400 font-semibold' : 'text-[var(--theme-muted)]',
+          <div className="flex items-center gap-1 text-[10px] tabular-nums">
+            {overdue && (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                <span className="text-red-400 font-semibold">Overdue</span>
+                <span className="text-[var(--theme-muted)] mx-0.5">·</span>
+              </>
             )}
-          >
-            {overdue ? '\u26a0 ' : ''}
-            {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
+            <span className={overdue ? 'text-red-400 font-semibold' : 'text-[var(--theme-muted)]'}>
+              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
         )}
       </div>
     </div>

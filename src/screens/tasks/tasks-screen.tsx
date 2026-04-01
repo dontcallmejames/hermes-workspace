@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Add01Icon, RefreshIcon } from '@hugeicons/core-free-icons'
+import { Add01Icon, CheckListIcon, RefreshIcon } from '@hugeicons/core-free-icons'
 import { TaskCard } from './task-card'
 import { TaskDialog } from './task-dialog'
 import { toast } from '@/components/ui/toast'
@@ -23,6 +23,20 @@ import {
 import type { HermesTask, TaskColumn, CreateTaskInput } from '@/lib/tasks-api'
 
 const QUERY_KEY = ['hermes', 'tasks'] as const
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-card)] p-3 animate-pulse">
+      <div className="h-3.5 bg-[var(--theme-hover)] rounded w-3/4 mb-2" />
+      <div className="h-2.5 bg-[var(--theme-hover)] rounded w-full mb-1" />
+      <div className="h-2.5 bg-[var(--theme-hover)] rounded w-2/3 mb-3" />
+      <div className="flex gap-1.5">
+        <div className="h-4 w-12 bg-[var(--theme-hover)] rounded" />
+        <div className="h-4 w-10 bg-[var(--theme-hover)] rounded" />
+      </div>
+    </div>
+  )
+}
 
 export function TasksScreen() {
   const queryClient = useQueryClient()
@@ -123,27 +137,33 @@ export function TasksScreen() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--theme-border)] px-4 py-3 shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-base font-semibold text-[var(--theme-text)]">Tasks</h1>
-          <div className="hidden sm:flex items-center gap-3 text-xs text-[var(--theme-muted)]">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-base font-semibold text-[var(--theme-text)] shrink-0">Tasks</h1>
+          {/* Stats: always visible, condensed on mobile */}
+          <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)] flex-wrap">
             <span>{stats.total} total</span>
-            <span>·</span>
-            <span>{stats.inProgress} in progress</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">{stats.inProgress} in progress</span>
             {stats.overdue > 0 && (
               <>
                 <span>·</span>
                 <span className="text-red-400">{stats.overdue} overdue</span>
               </>
             )}
-            <span>·</span>
-            <span>{stats.completion}% done</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">{stats.completion}% done</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowDone(v => !v)}
-            className="text-xs text-[var(--theme-muted)] hover:text-[var(--theme-text)] transition-colors px-2 py-1 rounded"
+            className={cn(
+              'text-xs px-2.5 py-1 rounded-lg border transition-colors',
+              showDone
+                ? 'border-[var(--theme-accent)] text-[var(--theme-accent)] bg-[var(--theme-hover)]'
+                : 'border-[var(--theme-border)] text-[var(--theme-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-accent)]',
+            )}
           >
             {showDone ? 'Hide Done' : 'Show Done'}
           </button>
@@ -166,7 +186,10 @@ export function TasksScreen() {
       </div>
 
       {/* Board */}
-      <div className="flex flex-1 gap-3 overflow-x-auto overflow-y-hidden p-4 min-h-0">
+      <div
+        className="flex flex-1 gap-3 overflow-x-auto overflow-y-hidden p-4 min-h-0"
+        style={{ boxShadow: 'inset 0 8px 24px rgba(0,0,0,0.2)' }}
+      >
         {visibleColumns.map((col) => {
           const colTasks = tasksByColumn[col]
           const colColor = COLUMN_COLORS[col]
@@ -178,15 +201,18 @@ export function TasksScreen() {
               className={cn(
                 'flex flex-col rounded-xl border min-w-[240px] w-[280px] shrink-0',
                 'bg-[var(--theme-card)] border-[var(--theme-border)]',
-                'transition-colors',
+                'transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.25)]',
                 isDragOver && 'border-[var(--theme-accent)] bg-[var(--theme-hover)]',
               )}
               onDragOver={e => handleDragOver(e, col)}
               onDrop={e => handleDrop(e, col)}
               onDragLeave={() => setDragOverColumn(null)}
             >
-              {/* Column header */}
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-[var(--theme-border)]">
+              {/* Column header with colored top border */}
+              <div
+                className="flex items-center justify-between px-3 py-2.5 border-b border-[var(--theme-border)] rounded-t-xl"
+                style={{ borderTopWidth: 2, borderTopColor: colColor, borderTopStyle: 'solid' }}
+              >
                 <div className="flex items-center gap-2">
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
@@ -196,7 +222,7 @@ export function TasksScreen() {
                     {COLUMN_LABELS[col]}
                   </span>
                   <span className="text-xs text-[var(--theme-muted)]">
-                    ({colTasks.length})
+                    ({tasksQuery.isLoading ? '…' : colTasks.length})
                   </span>
                 </div>
                 <button
@@ -210,31 +236,47 @@ export function TasksScreen() {
 
               {/* Cards */}
               <div className="flex flex-col gap-2 p-2 flex-1 overflow-y-auto">
-                <AnimatePresence initial={false}>
-                  {colTasks.length === 0 ? (
-                    <div className="text-xs text-[var(--theme-muted)] text-center py-6 opacity-50">
-                      No tasks
-                    </div>
-                  ) : (
-                    colTasks.map(task => (
+                {tasksQuery.isLoading ? (
+                  <>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                  </>
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {colTasks.length === 0 ? (
                       <motion.div
-                        key={task.id}
-                        layout
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        onDragEnd={handleDragEnd}
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex flex-col items-center justify-center py-8 gap-2 text-[var(--theme-muted)] opacity-60"
                       >
-                        <TaskCard
-                          task={task}
-                          isDragging={draggingId === task.id}
-                          onDragStart={e => handleDragStart(e, task.id)}
-                          onClick={() => setEditingTask(task)}
-                        />
+                        <HugeiconsIcon icon={CheckListIcon} size={22} />
+                        <p className="text-xs font-medium">No tasks</p>
+                        <p className="text-[10px]">Drop here or click + to add</p>
                       </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
+                    ) : (
+                      colTasks.map(task => (
+                        <motion.div
+                          key={task.id}
+                          layout
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <TaskCard
+                            task={task}
+                            isDragging={draggingId === task.id}
+                            onDragStart={e => handleDragStart(e, task.id)}
+                            onClick={() => setEditingTask(task)}
+                          />
+                        </motion.div>
+                      ))
+                    )}
+                  </AnimatePresence>
+                )}
               </div>
             </div>
           )
