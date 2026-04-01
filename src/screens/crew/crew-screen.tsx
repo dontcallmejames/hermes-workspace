@@ -92,13 +92,13 @@ function SkeletonCard() {
       <div className="border-l-[3px] border-l-[#B87333] p-4 h-full">
         <div className="flex justify-between mb-3">
           <div className="h-2.5 bg-[var(--theme-hover)] rounded w-16" />
-          <div className="h-2.5 bg-[var(--theme-hover)] rounded w-24" />
+          <div className="h-4 bg-[var(--theme-hover)] rounded w-20" />
         </div>
-        <div className="h-6 bg-[var(--theme-hover)] rounded w-28 mb-1" />
+        <div className="h-7 bg-[var(--theme-hover)] rounded w-28 mb-1" />
         <div className="h-3 bg-[var(--theme-hover)] rounded w-36 mb-4" />
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[0,1,2].map(i => (
-            <div key={i} className="rounded bg-[var(--theme-hover)] h-12" />
+            <div key={i} className="rounded border border-[var(--theme-border)] bg-[var(--theme-hover)] h-14" />
           ))}
         </div>
         <div className="flex justify-between">
@@ -134,7 +134,7 @@ function AgentCard({ member }: { member: CrewMember }) {
     <div
       className={cn(
         'rounded-lg border border-[var(--theme-border)] bg-[var(--theme-card)] overflow-hidden',
-        'transition-all duration-200',
+        'transition-all duration-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
         status === 'offline' && 'opacity-70',
       )}
     >
@@ -145,14 +145,13 @@ function AgentCard({ member }: { member: CrewMember }) {
         {/* Top row: status dot + role */}
         <div className="flex items-start justify-between gap-2">
           <StatusDot status={status} />
-          <span className="text-[10px] text-[var(--theme-muted)] uppercase tracking-wider text-right">
+          <span className="text-[9px] font-medium text-[var(--theme-muted)] uppercase tracking-wider text-right bg-[var(--theme-hover)] border border-[var(--theme-border)] px-1.5 py-0.5 rounded-sm">
             {member.role}
           </span>
         </div>
-
         {/* Agent name + model */}
         <div>
-          <h3 className="text-lg font-semibold capitalize" style={{ color: '#f59e0b' }}>
+          <h3 className="text-xl font-bold tracking-tight capitalize" style={{ color: '#f59e0b' }}>
             {member.id}
           </h3>
           <p className="text-xs text-[var(--theme-muted)] mt-0.5">
@@ -195,10 +194,10 @@ function AgentCard({ member }: { member: CrewMember }) {
           ].map(({ label, value }) => (
             <div
               key={label}
-              className="rounded bg-[var(--theme-hover)] px-2 py-1.5 text-center"
+              className="rounded border border-[var(--theme-border)] bg-[var(--theme-hover)] px-2 py-2 text-center"
             >
-              <div className="text-sm font-semibold text-[var(--theme-text)]">{value}</div>
-              <div className="text-[9px] text-[var(--theme-muted)] uppercase tracking-wide">{label}</div>
+              <div className="text-sm font-bold" style={{ color: '#f59e0b' }}>{value}</div>
+              <div className="text-[9px] text-[var(--theme-muted)] uppercase tracking-widest mt-0.5">{label}</div>
             </div>
           ))}
         </div>
@@ -231,7 +230,7 @@ function AgentCard({ member }: { member: CrewMember }) {
           <button
             type="button"
             onClick={handleViewTasks}
-            className="flex items-center gap-1 text-[11px] text-[var(--theme-muted)] hover:text-[#B87333] transition-colors"
+            className="flex items-center gap-1 text-[11px] text-[var(--theme-muted)] hover:text-[#B87333] hover:bg-[var(--theme-hover)] px-2 py-1 rounded transition-colors -ml-2"
           >
             <HugeiconsIcon icon={CheckListIcon} size={12} />
             Tasks
@@ -239,7 +238,7 @@ function AgentCard({ member }: { member: CrewMember }) {
           <button
             type="button"
             onClick={handleViewJobs}
-            className="flex items-center gap-1 text-[11px] text-[var(--theme-muted)] hover:text-[#B87333] transition-colors"
+            className="flex items-center gap-1 text-[11px] text-[var(--theme-muted)] hover:text-[#B87333] hover:bg-[var(--theme-hover)] px-2 py-1 rounded transition-colors -mr-2"
           >
             <HugeiconsIcon icon={Clock01Icon} size={12} />
             Cron Jobs
@@ -286,14 +285,14 @@ export function CrewScreen() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1
-              className="text-xl font-bold tracking-widest uppercase"
+              className="text-2xl font-bold tracking-widest uppercase"
               style={{ color: '#f59e0b' }}
             >
               Serenity Crew Manifest
             </h1>
-            <p className="text-xs text-[var(--theme-muted)] mt-1">
-              {crew.length} crew · {onlineCount} online
-              {updatedAgo && ` · Updated ${updatedAgo}`}
+            <p className="text-[11px] text-[var(--theme-muted)] mt-1 tracking-wide">
+              <span className="text-[var(--theme-text)]">{crew.length}</span> crew &nbsp;·&nbsp; <span className="text-green-400">{onlineCount}</span> online
+              {updatedAgo && <span> &nbsp;·&nbsp; Updated {updatedAgo}</span>}
             </p>
           </div>
           <button
