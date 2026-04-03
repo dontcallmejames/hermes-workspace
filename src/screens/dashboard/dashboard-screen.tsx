@@ -15,7 +15,6 @@ import type { HermesSession } from '@/server/hermes-api'
 import { chatQueryKeys } from '@/screens/chat/chat-queries'
 import { getCapabilities } from '@/server/gateway-capabilities'
 import { useIsFeatureAvailable } from '@/hooks/use-gateway-caps'
-import type { HermesSession } from '@/server/hermes-api'
 import { getUnavailableReason, isFeatureAvailable } from '@/lib/feature-gates'
 import { cn } from '@/lib/utils'
 
