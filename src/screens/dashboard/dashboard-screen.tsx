@@ -14,6 +14,7 @@ import {
 import { listSessions, getConfig } from '@/server/hermes-api'
 import { chatQueryKeys } from '@/screens/chat/chat-queries'
 import { getCapabilities } from '@/server/gateway-capabilities'
+import { useIsFeatureAvailable } from '@/hooks/use-gateway-caps'
 import type { HermesSession } from '@/server/hermes-api'
 import { getUnavailableReason, isFeatureAvailable } from '@/lib/feature-gates'
 import { cn } from '@/lib/utils'
@@ -202,7 +203,7 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
 // ── Model Card ───────────────────────────────────────────────────
 
 function ModelCard() {
-  const configAvailable = isFeatureAvailable('config')
+  const configAvailable = useIsFeatureAvailable('config') ?? false
   const configQuery = useQuery({
     queryKey: ['hermes-config'],
     queryFn: getConfig,
@@ -268,7 +269,7 @@ function ModelCard() {
 // ── Skills Widget ────────────────────────────────────────────────
 
 function SkillsWidget() {
-  const skillsAvailable = isFeatureAvailable('skills')
+  const skillsAvailable = useIsFeatureAvailable('skills') ?? false
   const skillsQuery = useQuery({
     queryKey: ['hermes-skills'],
     queryFn: async () => {
@@ -375,8 +376,8 @@ function SessionRow({ session, maxTokens, onClick }: {
 
 export function DashboardScreen() {
   const navigate = useNavigate()
-  const sessionsAvailable = isFeatureAvailable('sessions')
-  const skillsAvailable = isFeatureAvailable('skills')
+  const sessionsAvailable = useIsFeatureAvailable('sessions') ?? false
+  const skillsAvailable = useIsFeatureAvailable('skills') ?? false
   const sessionsQuery = useQuery({
     queryKey: chatQueryKeys.sessions,
     queryFn: () => listSessions(50, 0),
@@ -385,7 +386,7 @@ export function DashboardScreen() {
   })
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
-  const caps = getCapabilities()
+  const caps = { ...getCapabilities(), sessions: sessionsAvailable, skills: skillsAvailable }
 
   const stats = useMemo(() => {
     let totalMessages = 0, totalToolCalls = 0, totalTokens = 0
