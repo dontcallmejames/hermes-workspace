@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { listSessions, getConfig } from '@/server/hermes-api'
+import type { HermesSession } from '@/server/hermes-api'
 import { chatQueryKeys } from '@/screens/chat/chat-queries'
 import { getCapabilities } from '@/server/gateway-capabilities'
 import type { HermesSession } from '@/server/hermes-api'
@@ -215,17 +215,21 @@ function ModelCard() {
   const configAvailable = useFeatureAvailable('config')
   const configQuery = useQuery({
     queryKey: ['hermes-config'],
-    queryFn: getConfig,
+    queryFn: async () => {
+      const res = await fetch('/api/hermes-config')
+      if (!res.ok) return null
+      return res.json() as Promise<Record<string, unknown>>
+    },
     staleTime: 30_000,
     enabled: configAvailable,
   })
-  const caps = getCapabilities()
   const config = configQuery.data as Record<string, unknown> | undefined
-  const modelBlock = config?.model as Record<string, unknown> | undefined
-  const modelName = (modelBlock?.default ?? config?.model ?? '—') as string
-  const provider = (modelBlock?.provider ?? config?.provider ?? '—') as string
-  const baseUrl = (modelBlock?.base_url ?? config?.base_url ?? '') as string
-  const connected = caps?.sessions === true
+  const modelName = (config?.activeModel ?? '—') as string
+  const provider = (config?.activeProvider ?? '—') as string
+  const configBlock = config?.config as Record<string, unknown> | undefined
+  const modelBlock = configBlock?.model as Record<string, unknown> | undefined
+  const baseUrl = (modelBlock?.base_url ?? configBlock?.base_url ?? '') as string
+  const connected = sessionsAvailable
   const fallbackBlock = config?.fallback_model as Record<string, unknown> | undefined
   const fallbackModel = fallbackBlock?.model as string | undefined
 
@@ -414,7 +418,7 @@ export function DashboardScreen() {
   })
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
-  const caps = getCapabilities()
+  const caps = { ...getCapabilities(), sessions: sessionsAvailable, skills: skillsAvailable }
 
   const stats = useMemo(() => {
     let totalMessages = 0, totalToolCalls = 0, totalTokens = 0
