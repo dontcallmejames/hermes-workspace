@@ -165,14 +165,22 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
         entry.messages += s.message_count ?? 0
       }
     }
-    return Array.from(dayMap.entries()).map(([date, data]) => ({ date, ...data }))
+    // Trim leading empty days so active days fill the chart rather than
+    // showing a long flat line at the start of the window.
+    const all = Array.from(dayMap.entries()).map(([date, data]) => ({ date, ...data }))
+    let firstActive = all.findIndex(d => d.sessions > 0 || d.messages > 0)
+    if (firstActive > 0) firstActive = Math.max(0, firstActive - 1) // keep 1 buffer day
+    return firstActive > 0 ? all.slice(firstActive) : all
   }, [sessions])
 
   return (
     <GlassCard title="Activity" titleRight={<span className="text-[10px] text-muted">14 days</span>} accentColor="#6366f1" className="h-full">
       <div className="h-[200px] w-full -ml-2">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          {/* Dual Y-axis: messages (left, larger values) + sessions (right, smaller values).
+              Without this, sessions flatlines at zero because message counts dominate
+              the shared scale. */}
+          <AreaChart data={chartData} margin={{ top: 8, right: 32, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="g-sessions" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
@@ -185,10 +193,11 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#22c55e' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#6366f1' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
             <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', fontSize: '11px' }} labelStyle={{ color: '#888', fontSize: '10px' }} />
-            <Area type="monotone" dataKey="messages" stroke="#22c55e" fill="url(#g-messages)" strokeWidth={1.5} dot={false} />
-            <Area type="monotone" dataKey="sessions" stroke="#6366f1" fill="url(#g-sessions)" strokeWidth={2} dot={false} />
+            <Area yAxisId="left" type="monotone" dataKey="messages" stroke="#22c55e" fill="url(#g-messages)" strokeWidth={1.5} dot={false} />
+            <Area yAxisId="right" type="monotone" dataKey="sessions" stroke="#6366f1" fill="url(#g-sessions)" strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -379,7 +388,10 @@ export function DashboardScreen() {
   const sessionsAvailable = useFeatureAvailable('sessions')
   const skillsAvailable = useFeatureAvailable('skills')
   const sessionsQuery = useQuery({
-    queryKey: chatQueryKeys.sessions,
+    // Use a dedicated query key — NOT chatQueryKeys.sessions — to avoid
+    // cache collisions with the chat sidebar which fetches fewer sessions
+    // and overwrites the dashboard's larger dataset.
+    queryKey: ['dashboard', 'sessions'],
     queryFn: () => listSessions(50, 0),
     staleTime: 10_000,
     refetchInterval: 30_000,
