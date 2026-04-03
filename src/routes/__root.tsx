@@ -97,6 +97,8 @@ const themeColorScript = `
 })()
 `
 
+import { getCapabilities } from '@/server/gateway-capabilities'
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -232,10 +234,22 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // Inject SSR-probed caps as window global before React hydrates.
+  // The root loader awaits ensureGatewayProbed(), so by the time RootDocument
+  // renders the capabilities cache is populated. This prevents the client from
+  // flashing "backend unavailable" while gateway-capabilities.ts re-probes.
+  const caps = getCapabilities()
+  const capsInlineScript = caps.probed
+    ? `window.__HERMES_CAPS__=${JSON.stringify(caps)};`
+    : ''
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta httpEquiv="Content-Security-Policy" content={APP_CSP} />
+        {capsInlineScript && (
+          <script dangerouslySetInnerHTML={{ __html: capsInlineScript }} />
+        )}
         <script dangerouslySetInnerHTML={{ __html: `
           // Polyfill crypto.randomUUID for non-secure contexts (HTTP access via LAN IP)
           if (typeof crypto !== 'undefined' && !crypto.randomUUID) {

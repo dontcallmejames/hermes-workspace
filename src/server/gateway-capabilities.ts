@@ -237,8 +237,15 @@ export async function ensureGatewayProbed(): Promise<GatewayCapabilities> {
 
 // ── Accessors ─────────────────────────────────────────────────────
 
-/** Full capabilities — backward compatible */
+/** Full capabilities — backward compatible.
+ *  On the client, seeds from window.__HERMES_CAPS__ injected by SSR so
+ *  React hydration doesn't flash "backend unavailable" while re-probing. */
 export function getCapabilities(): GatewayCapabilities {
+  if (typeof window !== 'undefined' && !capabilities.probed) {
+    // @ts-ignore
+    const seeded = (window as { __HERMES_CAPS__?: GatewayCapabilities }).__HERMES_CAPS__
+    if (seeded?.probed) return seeded
+  }
   return capabilities
 }
 

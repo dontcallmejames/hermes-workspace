@@ -456,33 +456,6 @@ const config = defineConfig(({ mode, command }) => {
               return
             }
 
-            // Portable-aware health check — returns ok if any chat backend is available
-            if (req.method === 'GET' && requestPath === '/api/connection-status') {
-              try {
-                // Check if the configured backend has /v1/models (works for Ollama, OpenAI, etc.)
-                const modelsRes = await fetch(`${hermesApiUrl}/v1/models`, {
-                  signal: AbortSignal.timeout(3000),
-                })
-                if (modelsRes.ok) {
-                  res.statusCode = 200
-                  res.setHeader('content-type', 'application/json')
-                  res.end(JSON.stringify({ ok: true, mode: 'portable', backend: hermesApiUrl }))
-                  return
-                }
-                // Fall back to /health for full Hermes backends
-                const healthRes = await fetch(`${hermesApiUrl}/health`, {
-                  signal: AbortSignal.timeout(3000),
-                })
-                res.statusCode = healthRes.ok ? 200 : 502
-                res.setHeader('content-type', 'application/json')
-                res.end(JSON.stringify({ ok: healthRes.ok, mode: 'enhanced', backend: hermesApiUrl }))
-              } catch {
-                res.statusCode = 502
-                res.setHeader('content-type', 'application/json')
-                res.end(JSON.stringify({ ok: false, mode: 'disconnected', backend: hermesApiUrl }))
-              }
-              return
-            }
 
             if (
               req.method !== 'POST' ||
