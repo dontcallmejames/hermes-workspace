@@ -269,6 +269,10 @@ export function toSessionSummary(session: HermesSession): Record<string, unknown
       : session.started_at
         ? session.started_at * 1000
         : Date.now(),
+    // Pass through message/tool counts so the dashboard activity chart can
+    // plot messages — without these the chart flatlines on sessions only.
+    message_count: session.message_count ?? 0,
+    tool_call_count: session.tool_call_count ?? 0,
     usage: {
       promptTokens: session.input_tokens ?? 0,
       completionTokens: session.output_tokens ?? 0,
