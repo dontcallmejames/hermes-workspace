@@ -391,8 +391,23 @@ export function DashboardScreen() {
     // Use a dedicated query key — NOT chatQueryKeys.sessions — to avoid
     // cache collisions with the chat sidebar which fetches fewer sessions
     // and overwrites the dashboard's larger dataset.
+    // Also use the workspace proxy (/api/sessions) rather than the server-side
+    // listSessions() — the latter calls the gateway via HERMES_API which is
+    // only available server-side and returns nothing when called from the client.
     queryKey: ['dashboard', 'sessions'],
-    queryFn: () => listSessions(50, 0),
+    queryFn: async () => {
+      const res = await fetch('/api/sessions?limit=200&offset=0')
+      if (!res.ok) return []
+      const data = await res.json() as { sessions?: Array<Record<string, unknown>> }
+      return (data.sessions ?? []).map(s => ({
+        id: (s.key ?? s.id) as string,
+        started_at: s.startedAt ? (s.startedAt as number) / 1000 : undefined,
+        message_count: (s.message_count as number | undefined) ?? 0,
+        tool_call_count: (s.tool_call_count as number | undefined) ?? 0,
+        input_tokens: (s.tokenCount as number | undefined) ?? 0,
+        output_tokens: 0,
+      })) as HermesSession[]
+    },
     staleTime: 10_000,
     refetchInterval: 30_000,
     enabled: sessionsAvailable,
