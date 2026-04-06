@@ -271,38 +271,72 @@ export function CrewScreen() {
   const { crew, lastUpdated, isLoading, isError, refetch } = useCrewStatus()
   const updatedAgo = useUpdatedAgo(lastUpdated)
 
-  const onlineCount = crew.filter(m => getOnlineStatus(m) === 'online').length
+  const displayCrew = [...crew].sort((a, b) => {
+    const rank = (member: CrewMember) => {
+      const status = getOnlineStatus(member)
+      if (status === 'online') return 0
+      if (status === 'offline') return 1
+      return 2
+    }
+    const rankDiff = rank(a) - rank(b)
+    if (rankDiff !== 0) return rankDiff
+    return a.id.localeCompare(b.id)
+  })
+
+  const onlineCount = displayCrew.filter(m => getOnlineStatus(m) === 'online').length
+  const assignedTaskCount = displayCrew.reduce((sum, member) => sum + member.assignedTaskCount, 0)
+  const runningCronCount = displayCrew.reduce((sum, member) => sum + member.cronJobCount, 0)
 
   const handleRefresh = useCallback(() => {
     void refetch()
   }, [refetch])
 
   return (
-    <div className="flex flex-col h-full overflow-auto p-4 md:p-6 gap-6">
+    <div className="flex h-full flex-col gap-6 overflow-auto p-4 md:p-6">
       {/* ── Header ── */}
-      <div>
-        <div className="h-px mb-3" style={{ background: 'linear-gradient(to right, #B87333, transparent)' }} />
+      <div className="space-y-4">
+        <div className="h-px" style={{ background: 'linear-gradient(to right, #B87333, transparent)' }} />
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1
-              className="text-2xl font-bold tracking-widest uppercase"
-              style={{ color: '#f59e0b' }}
-            >
-              Serenity Crew Manifest
-            </h1>
-            <p className="text-[11px] text-[var(--theme-muted)] mt-1 tracking-wide">
-              <span className="text-[var(--theme-text)]">{crew.length}</span> crew &nbsp;·&nbsp; <span className="text-green-400">{onlineCount}</span> online
-              {updatedAgo && <span> &nbsp;·&nbsp; Updated {updatedAgo}</span>}
-            </p>
+          <div className="max-w-3xl space-y-2">
+            <div>
+              <h1
+                className="text-2xl font-bold tracking-[0.18em] uppercase"
+                style={{ color: '#f59e0b' }}
+              >
+                Serenity Crew Manifest
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--theme-muted)]">
+                Live crew health across gateways, recent session activity, assigned tasks, and cron coverage.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em]">
+              <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-3 py-1 text-[var(--theme-muted)]">
+                <span className="text-[var(--theme-text)]">{displayCrew.length}</span> crew
+              </span>
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-emerald-300">
+                {onlineCount} online
+              </span>
+              <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-3 py-1 text-[var(--theme-muted)]">
+                {assignedTaskCount} assigned tasks
+              </span>
+              <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-3 py-1 text-[var(--theme-muted)]">
+                {runningCronCount} cron jobs
+              </span>
+              {updatedAgo ? (
+                <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-3 py-1 text-[var(--theme-muted)]">
+                  Updated {updatedAgo}
+                </span>
+              ) : null}
+            </div>
           </div>
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isLoading}
             className={cn(
-              'flex items-center gap-1.5 text-xs text-[var(--theme-muted)]',
-              'hover:text-[#B87333] transition-colors',
-              'disabled:opacity-40 disabled:cursor-not-allowed',
+              'inline-flex items-center gap-2 rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-3 py-2 text-xs font-medium text-[var(--theme-muted)] shadow-sm transition-all',
+              'hover:border-[#B87333]/40 hover:text-[#f59e0b] hover:shadow-[0_0_0_1px_rgba(184,115,51,0.12)]',
+              'disabled:cursor-not-allowed disabled:opacity-40',
             )}
           >
             <HugeiconsIcon
@@ -310,10 +344,10 @@ export function CrewScreen() {
               size={13}
               className={isLoading ? 'animate-spin' : ''}
             />
-            Refresh
+            Refresh manifest
           </button>
         </div>
-        <div className="h-px mt-3" style={{ background: 'linear-gradient(to right, #B87333, transparent)' }} />
+        <div className="h-px" style={{ background: 'linear-gradient(to right, #B87333, transparent)' }} />
       </div>
 
       {/* ── Error state ── */}
@@ -331,10 +365,10 @@ export function CrewScreen() {
       )}
 
       {/* ── Card grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading
           ? Array.from({ length: 5 }, (_, i) => <SkeletonCard key={i} />)
-          : crew.map(member => <AgentCard key={member.id} member={member} />)
+          : displayCrew.map(member => <AgentCard key={member.id} member={member} />)
         }
       </div>
     </div>

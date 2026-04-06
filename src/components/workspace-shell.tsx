@@ -117,6 +117,10 @@ export function WorkspaceShell() {
     authRequired: authStatus?.authRequired ?? false,
   }
 
+  const shouldShowStartupOverlay =
+    !authState.checked &&
+    (pathname === '/' || pathname === '/new' || pathname.startsWith('/chat'))
+
   const handleStartupConnected = useCallback((status: AuthStatus) => {
     setAuthStatus(status)
     setConnectionVerified(true)
@@ -127,6 +131,8 @@ export function WorkspaceShell() {
     if (pathname.startsWith('/terminal')) return 'Terminal'
     if (pathname.startsWith('/files')) return 'Files'
     if (pathname.startsWith('/jobs')) return 'Jobs'
+    if (pathname.startsWith('/tasks')) return 'Tasks'
+    if (pathname.startsWith('/crew')) return 'Crew'
     if (pathname.startsWith('/memory')) return 'Memory'
     if (pathname.startsWith('/skills')) return 'Skills'
     if (pathname.startsWith('/settings')) return 'Settings'
@@ -373,7 +379,7 @@ export function WorkspaceShell() {
           />
         ) : null}
 
-        {!authState.checked ? (
+        {shouldShowStartupOverlay ? (
           <ConnectionStartupScreen onConnected={handleStartupConnected} />
         ) : null}
       </div>
