@@ -151,8 +151,8 @@ function AgentCard({ member }: { member: CrewMember }) {
         </div>
         {/* Agent name + model */}
         <div>
-          <h3 className="text-xl font-bold tracking-tight capitalize" style={{ color: '#f59e0b' }}>
-            {member.id}
+          <h3 className="text-xl font-bold tracking-tight" style={{ color: '#f59e0b' }}>
+            {member.displayName || member.id}
           </h3>
           <p className="text-xs text-[var(--theme-muted)] mt-0.5">
             {member.model} · {member.provider}
@@ -280,7 +280,7 @@ export function CrewScreen() {
     }
     const rankDiff = rank(a) - rank(b)
     if (rankDiff !== 0) return rankDiff
-    return a.id.localeCompare(b.id)
+    return (a.displayName || a.id).localeCompare(b.displayName || b.id)
   })
 
   const onlineCount = displayCrew.filter(m => getOnlineStatus(m) === 'online').length
@@ -303,10 +303,10 @@ export function CrewScreen() {
                 className="text-2xl font-bold tracking-[0.18em] uppercase"
                 style={{ color: '#f59e0b' }}
               >
-                Serenity Crew Manifest
+                Crew Status
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--theme-muted)]">
-                Live crew health across gateways, recent session activity, assigned tasks, and cron coverage.
+                Live agent health across profiles, recent session activity, assigned tasks, and cron coverage.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em]">

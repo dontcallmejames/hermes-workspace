@@ -8,6 +8,7 @@ export type CrewPlatformInfo = {
 
 export type CrewMember = {
   id: string
+  displayName: string
   role: string
   profileFound: boolean
   gatewayState: 'running' | 'stopped' | 'unknown' | string

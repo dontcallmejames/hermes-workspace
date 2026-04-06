@@ -10,6 +10,7 @@ import { HERMES_API, ensureGatewayProbed } from '../../server/gateway-capabiliti
 
 type CrewDefinition = {
   id: string
+  displayName: string
   role: string
   profilePath: string | null
 }
@@ -22,14 +23,6 @@ type DbStats = {
   estimatedCostUsd: number | null
   lastSessionTitle: string | null
   lastSessionAt: number | null
-}
-
-const ROLE_BY_ID: Record<string, string> = {
-  kaylee: "Ship's Engineer",
-  wash: 'Pilot',
-  book: 'Shepherd',
-  river: 'Reader',
-  simon: "Ship's Doctor",
 }
 
 function titleCase(value: string): string {
@@ -51,10 +44,11 @@ function buildCrewDefinitions(): CrewDefinition[] {
     : []
 
   return [
-    { id: 'kaylee', role: ROLE_BY_ID.kaylee, profilePath: null },
+    { id: 'kaylee', displayName: 'Primary', role: 'Default agent', profilePath: null },
     ...dynamicProfiles.map((profile) => ({
       id: profile,
-      role: ROLE_BY_ID[profile] ?? titleCase(profile),
+      displayName: titleCase(profile),
+      role: 'Agent profile',
       profilePath: profile,
     })),
   ]
@@ -243,6 +237,7 @@ export const Route = createFileRoute('/api/crew-status')({
           if (!profileFound) {
             return {
               id: member.id,
+              displayName: member.displayName,
               role: member.role,
               profileFound: false,
               gatewayState: 'unknown',
@@ -268,6 +263,7 @@ export const Route = createFileRoute('/api/crew-status')({
 
           return {
             id: member.id,
+            displayName: member.displayName,
             role: member.role,
             profileFound: true,
             gatewayState: gatewayInfo.gatewayState,
