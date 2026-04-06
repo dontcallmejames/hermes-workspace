@@ -13,7 +13,8 @@ import {
   Moon02Icon,
   PencilEdit02Icon,
   PuzzleIcon,
-
+  CheckListIcon,
+  UserMultiple02Icon,
   Search01Icon, Settings01Icon, Sun02Icon 
 } from '@hugeicons/core-free-icons'
 import { AnimatePresence, motion } from 'motion/react'
@@ -554,6 +555,8 @@ function ChatSidebarComponent({
   const isFilesActive = pathname === '/files'
   const isTerminalActive = pathname === '/terminal'
   const isJobsActive = pathname === '/jobs'
+  const isTasksActive = pathname === '/tasks'
+  const isCrewActive = pathname === '/crew'
   const isMemoryActive = pathname === '/memory'
   const mainRoutes = ['/chat', '/new', '/files', '/terminal']
   const knowledgeRoutes = ['/memory', '/skills']
@@ -782,6 +785,20 @@ function ChatSidebarComponent({
       icon: Clock01Icon,
       label: 'Jobs',
       active: isJobsActive,
+    },
+    {
+      kind: 'link',
+      to: '/tasks',
+      icon: CheckListIcon,
+      label: 'Tasks',
+      active: isTasksActive,
+    },
+    {
+      kind: 'link',
+      to: '/crew',
+      icon: UserMultiple02Icon,
+      label: 'Crew',
+      active: isCrewActive,
     },
   ]
 
