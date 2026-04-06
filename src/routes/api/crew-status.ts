@@ -44,7 +44,7 @@ function buildCrewDefinitions(): CrewDefinition[] {
     : []
 
   return [
-    { id: 'kaylee', displayName: 'Workspace', role: 'Primary profile', profilePath: null },
+    { id: 'workspace', displayName: 'Workspace', role: 'Primary profile', profilePath: null },
     ...dynamicProfiles.map((profile) => ({
       id: profile,
       displayName: titleCase(profile),
