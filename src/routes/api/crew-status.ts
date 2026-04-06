@@ -44,11 +44,11 @@ function buildCrewDefinitions(): CrewDefinition[] {
     : []
 
   return [
-    { id: 'kaylee', displayName: 'Primary', role: 'Default agent', profilePath: null },
+    { id: 'kaylee', displayName: 'Workspace', role: 'Primary profile', profilePath: null },
     ...dynamicProfiles.map((profile) => ({
       id: profile,
       displayName: titleCase(profile),
-      role: 'Agent profile',
+      role: 'Profile',
       profilePath: profile,
     })),
   ]
