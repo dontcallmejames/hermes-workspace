@@ -11,15 +11,45 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { listSessions, getConfig } from '@/server/hermes-api'
 import { chatQueryKeys } from '@/screens/chat/chat-queries'
-import { getCapabilities } from '@/server/gateway-capabilities'
 import type { HermesSession } from '@/server/hermes-api'
 import { getUnavailableReason } from '@/lib/feature-gates'
 import { useFeatureAvailable } from '@/hooks/use-feature-available'
 import { cn } from '@/lib/utils'
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+type GatewayStatusResponse = {
+  capabilities?: Record<string, boolean>
+  hermesUrl?: string
+}
+
+async function fetchDashboardConfig(): Promise<Record<string, unknown>> {
+  const res = await fetch('/api/hermes-config')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return (await res.json()) as Record<string, unknown>
+}
+
+async function fetchDashboardSessions(): Promise<Array<HermesSession>> {
+  const res = await fetch('/api/sessions?limit=50&offset=0')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json() as { sessions?: Array<Record<string, unknown>> }
+  return (data.sessions ?? []).map((session) => ({
+    id: String(session.key ?? session.id ?? ''),
+    title: typeof session.title === 'string' ? session.title : undefined,
+    model: typeof session.model === 'string' ? session.model : undefined,
+    started_at: typeof session.startedAt === 'number' ? session.startedAt / 1000 : undefined,
+    ended_at: typeof session.updatedAt === 'number' ? session.updatedAt / 1000 : undefined,
+    message_count: typeof session.message_count === 'number' ? session.message_count : 0,
+    tool_call_count: typeof session.tool_call_count === 'number' ? session.tool_call_count : 0,
+    input_tokens: typeof session.usage === 'object' && session.usage !== null && typeof (session.usage as Record<string, unknown>).promptTokens === 'number'
+      ? ((session.usage as Record<string, number>).promptTokens ?? 0)
+      : 0,
+    output_tokens: typeof session.usage === 'object' && session.usage !== null && typeof (session.usage as Record<string, unknown>).completionTokens === 'number'
+      ? ((session.usage as Record<string, number>).completionTokens ?? 0)
+      : 0,
+  })) as Array<HermesSession>
+}
 
 function timeAgo(ts: number): string {
   const diff = Date.now() / 1000 - ts
@@ -204,19 +234,27 @@ function ActivityChart({ sessions }: { sessions: HermesSession[] }) {
 
 function ModelCard() {
   const configAvailable = useFeatureAvailable('config')
+  const gatewayStatusQuery = useQuery({
+    queryKey: ['gateway-status'],
+    queryFn: async () => {
+      const res = await fetch('/api/gateway-status')
+      if (!res.ok) return null
+      return (await res.json()) as GatewayStatusResponse
+    },
+    staleTime: 30_000,
+  })
   const configQuery = useQuery({
     queryKey: ['hermes-config'],
-    queryFn: getConfig,
+    queryFn: fetchDashboardConfig,
     staleTime: 30_000,
     enabled: configAvailable,
   })
-  const caps = getCapabilities()
   const config = configQuery.data as Record<string, unknown> | undefined
   const modelBlock = config?.model as Record<string, unknown> | undefined
   const modelName = (modelBlock?.default ?? config?.model ?? '—') as string
   const provider = (modelBlock?.provider ?? config?.provider ?? '—') as string
   const baseUrl = (modelBlock?.base_url ?? config?.base_url ?? '') as string
-  const connected = caps?.sessions === true
+  const connected = gatewayStatusQuery.data?.capabilities?.sessions === true
   const fallbackBlock = config?.fallback_model as Record<string, unknown> | undefined
   const fallbackModel = fallbackBlock?.model as string | undefined
 
@@ -378,16 +416,27 @@ export function DashboardScreen() {
   const navigate = useNavigate()
   const sessionsAvailable = useFeatureAvailable('sessions')
   const skillsAvailable = useFeatureAvailable('skills')
+  const gatewayStatusQuery = useQuery({
+    queryKey: ['gateway-status'],
+    queryFn: async () => {
+      const res = await fetch('/api/gateway-status')
+      if (!res.ok) return null
+      return (await res.json()) as GatewayStatusResponse
+    },
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  })
+
   const sessionsQuery = useQuery({
-    queryKey: chatQueryKeys.sessions,
-    queryFn: () => listSessions(50, 0),
+    queryKey: ['dashboard', 'sessions'],
+    queryFn: fetchDashboardSessions,
     staleTime: 10_000,
     refetchInterval: 30_000,
     enabled: sessionsAvailable,
   })
 
   const sessions = (sessionsQuery.data ?? []) as HermesSession[]
-  const caps = getCapabilities()
+  const caps = gatewayStatusQuery.data?.capabilities ?? {}
 
   const stats = useMemo(() => {
     let totalMessages = 0, totalToolCalls = 0, totalTokens = 0

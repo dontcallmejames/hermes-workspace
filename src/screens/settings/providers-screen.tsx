@@ -52,7 +52,6 @@ import {
   getProviderInfo,
   normalizeProviderId,
 } from '@/lib/provider-catalog'
-import { getConfig, patchConfig } from '@/server/hermes-api'
 import { cn } from '@/lib/utils'
 
 type ProviderStatus = 'active' | 'configured'
@@ -112,7 +111,24 @@ type SaveSettingPayload = {
   label: string
 }
 
-const HERMES_API_URL = process.env.HERMES_API_URL || 'http://127.0.0.1:8642'
+async function fetchHermesConfig(): Promise<Record<string, unknown>> {
+  const response = await fetch('/api/hermes-config')
+  if (!response.ok) {
+    throw new Error(`Hermes config request failed (${response.status})`)
+  }
+  return (await response.json()) as Record<string, unknown>
+}
+
+async function patchHermesConfig(config: Record<string, unknown>): Promise<void> {
+  const response = await fetch('/api/hermes-config', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config }),
+  })
+  if (!response.ok) {
+    throw new Error(`Hermes config patch failed (${response.status})`)
+  }
+}
 
 type HermesCatalogEntry =
   | string
@@ -134,7 +150,7 @@ async function fetchModels(): Promise<{
   models?: Array<ModelCatalogEntry>
   configuredProviders?: Array<string>
 }> {
-  const response = await fetch(`${HERMES_API_URL}/v1/models`)
+  const response = await fetch('/api/models')
   if (!response.ok) {
     throw new Error(`Hermes models request failed (${response.status})`)
   }
@@ -957,7 +973,7 @@ function ActiveModelCard({ modelOptions }: { modelOptions: Array<SelectOption> }
 
   const configQuery = useQuery({
     queryKey: ['hermes', 'active-config'],
-    queryFn: getConfig,
+    queryFn: fetchHermesConfig,
   })
 
   const saveMutation = useMutation({
@@ -993,7 +1009,7 @@ function ActiveModelCard({ modelOptions }: { modelOptions: Array<SelectOption> }
           }
         : null
 
-      await patchConfig(patch)
+      await patchHermesConfig(patch)
     },
     onSuccess: async () => {
       await Promise.all([
