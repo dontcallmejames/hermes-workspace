@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Add01Icon, CheckListIcon, RefreshIcon } from '@hugeicons/core-free-icons'
@@ -58,6 +58,7 @@ export function TasksScreen() {
     queryKey: [...QUERY_KEY, showDone],
     queryFn: () => fetchTasks({ include_done: showDone }),
     refetchInterval: 30_000,
+    placeholderData: keepPreviousData,
   })
 
   // Load assignees dynamically from profiles + config
@@ -238,7 +239,7 @@ export function TasksScreen() {
 
       {/* Board */}
       <div
-        className="flex flex-1 gap-3 overflow-x-auto overflow-y-hidden p-4 min-h-0"
+        className="mx-auto flex w-full max-w-[1200px] flex-1 gap-3 overflow-x-auto overflow-y-hidden p-4 min-h-0"
         style={{ boxShadow: 'inset 0 8px 24px rgba(0,0,0,0.2)' }}
       >
         {visibleColumns.map((col) => {
@@ -250,7 +251,7 @@ export function TasksScreen() {
             <div
               key={col}
               className={cn(
-                'flex flex-col rounded-xl border min-w-[240px] w-[280px] shrink-0',
+                'flex flex-col rounded-xl border min-w-[200px] w-[210px] shrink-0',
                 'bg-[var(--theme-card)] border-[var(--theme-border)]',
                 'transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.25)]',
                 isDragOver && 'border-[var(--theme-accent)] bg-[var(--theme-hover)]',
@@ -270,7 +271,7 @@ export function TasksScreen() {
                     {COLUMN_LABELS[col]}
                   </span>
                   <span className="text-xs text-[var(--theme-muted)]">
-                    ({tasksQuery.isLoading ? '…' : colTasks.length})
+                    ({tasksQuery.isFetching && tasksQuery.data === undefined ? '…' : colTasks.length})
                   </span>
                 </div>
                 <button
@@ -284,7 +285,7 @@ export function TasksScreen() {
 
               {/* Cards */}
               <div className="flex flex-col gap-2 p-2 flex-1 overflow-y-auto">
-                {tasksQuery.isLoading ? (
+                {tasksQuery.data === undefined ? (
                   <>
                     <SkeletonCard />
                     <SkeletonCard />
