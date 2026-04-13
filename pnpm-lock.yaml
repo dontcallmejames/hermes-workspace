@@ -56,6 +56,12 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cytoscape:
+        specifier: ^3.33.2
+        version: 3.33.2
+      cytoscape-fcose:
+        specifier: ^2.2.0
+        version: 2.2.0(cytoscape@3.33.2)
       marked:
         specifier: ^17.0.1
         version: 17.0.4
@@ -2569,6 +2575,10 @@ packages:
 
   cytoscape@3.33.1:
     resolution: {integrity: sha512-iJc4TwyANnOGR1OmWhsS9ayRS3s+XQ185FmuHObThD+5AeJCakAAbWv8KimMTt08xCCLNgneQwFp+JRJOr9qGQ==}
+    engines: {node: '>=0.10'}
+
+  cytoscape@3.33.2:
+    resolution: {integrity: sha512-sj4HXd3DokGhzZAdjDejGvTPLqlt84vNFN8m7bGsOzDY5DyVcxIb2ejIXat2Iy7HxWhdT/N1oKyheJ5YdpsGuw==}
     engines: {node: '>=0.10'}
 
   d3-array@2.12.1:
@@ -7761,7 +7771,14 @@ snapshots:
       cose-base: 2.2.0
       cytoscape: 3.33.1
 
+  cytoscape-fcose@2.2.0(cytoscape@3.33.2):
+    dependencies:
+      cose-base: 2.2.0
+      cytoscape: 3.33.2
+
   cytoscape@3.33.1: {}
+
+  cytoscape@3.33.2: {}
 
   d3-array@2.12.1:
     dependencies:

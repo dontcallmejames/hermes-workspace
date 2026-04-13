@@ -22,6 +22,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { WikiGraph } from '@/components/wiki-graph'
 
 type WikiPageMeta = {
   path: string
@@ -67,19 +68,19 @@ type KnowledgeSearchResponse = {
   results?: Array<KnowledgeSearchResult>
 }
 
-type KnowledgeGraphNode = {
+export type KnowledgeGraphNode = {
   id: string
   title: string
   type?: string
   tags?: Array<string>
 }
 
-type KnowledgeGraphEdge = {
+export type KnowledgeGraphEdge = {
   source: string
   target: string
 }
 
-type KnowledgeGraphResponse = {
+export type KnowledgeGraphResponse = {
   nodes?: Array<KnowledgeGraphNode>
   edges?: Array<KnowledgeGraphEdge>
 }
@@ -194,81 +195,20 @@ function GraphCanvas({
   nodes,
   edges,
   onSelect,
+  currentPage,
 }: {
   nodes: Array<KnowledgeGraphNode>
   edges: Array<KnowledgeGraphEdge>
   onSelect: (path: string) => void
+  currentPage?: string | null
 }) {
-  const layout = useMemo(() => {
-    if (nodes.length === 0) return []
-    const width = 900
-    const height = 520
-    const centerX = width / 2
-    const centerY = height / 2
-    const radius = Math.max(140, Math.min(width, height) / 2 - 72)
-
-    return nodes.map((node, index) => {
-      const angle = (Math.PI * 2 * index) / Math.max(nodes.length, 1)
-      return {
-        ...node,
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-      }
-    })
-  }, [nodes])
-
-  const byId = useMemo(
-    () => new Map(layout.map((node) => [node.id, node])),
-    [layout],
-  )
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-primary-200 bg-primary-50 dark:border-neutral-800 dark:bg-neutral-950">
-      <svg viewBox="0 0 900 520" className="h-[520px] w-full">
-        {edges.map((edge, index) => {
-          const source = byId.get(edge.source)
-          const target = byId.get(edge.target)
-          if (!source || !target) return null
-          return (
-            <line
-              key={`${edge.source}:${edge.target}:${index}`}
-              x1={source.x}
-              y1={source.y}
-              x2={target.x}
-              y2={target.y}
-              stroke="rgba(148, 163, 184, 0.45)"
-              strokeWidth="1.25"
-            />
-          )
-        })}
-
-        {layout.map((node) => (
-          <g
-            key={node.id}
-            onClick={() => onSelect(node.id)}
-            className="cursor-pointer"
-          >
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r="16"
-              fill="rgba(59, 130, 246, 0.16)"
-              stroke="rgba(59, 130, 246, 0.65)"
-              strokeWidth="1.5"
-            />
-            <text
-              x={node.x}
-              y={node.y + 34}
-              textAnchor="middle"
-              fontSize="11"
-              fill="currentColor"
-            >
-              {node.title}
-            </text>
-          </g>
-        ))}
-      </svg>
-    </div>
+    <WikiGraph
+      nodes={nodes}
+      edges={edges}
+      onSelect={onSelect}
+      currentPage={currentPage}
+    />
   )
 }
 
@@ -1101,6 +1041,7 @@ export function KnowledgeBrowserScreen() {
               <GraphCanvas
                 nodes={graphQuery.data?.nodes ?? []}
                 edges={graphQuery.data?.edges ?? []}
+                currentPage={selectedPath}
                 onSelect={(pathValue) => {
                   setGraphOpen(false)
                   handleSelectPath(pathValue)
