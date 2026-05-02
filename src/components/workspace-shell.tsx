@@ -321,7 +321,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
                 : !isMobile &&
                     !isOnChatRoute &&
                     settings.showSystemMetricsFooter
-                  ? 'pb-[calc(1.5rem+1.75rem)]'
+                  ? 'pb-7'
                   : '',
             ].join(' ')}
             data-tour="chat-area"

@@ -1,14 +1,6 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  CheckmarkCircle02Icon,
-  CpuIcon,
-  DatabaseIcon,
-  HardDriveIcon,
-  WifiDisconnected02Icon,
-} from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 type SystemMetrics = {
@@ -57,38 +49,65 @@ function formatBytes(bytes: number): string {
   return `${value >= 10 || unit === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unit]}`
 }
 
-function metricTone(percent: number): 'good' | 'warn' | 'hot' {
-  if (percent >= 90) return 'hot'
+function metricTone(percent: number): 'normal' | 'warn' | 'critical' {
+  if (percent >= 90) return 'critical'
   if (percent >= 75) return 'warn'
-  return 'good'
+  return 'normal'
 }
 
-function MetricPill({
-  icon,
+function formatCheckedAt(checkedAt: number): string {
+  const ageSeconds = Math.max(0, Math.round((Date.now() - checkedAt) / 1000))
+  if (ageSeconds < 5) return 'now'
+  if (ageSeconds < 60) return `${ageSeconds}s ago`
+
+  const ageMinutes = Math.round(ageSeconds / 60)
+  return `${ageMinutes}m ago`
+}
+
+function MetricItem({
   label,
   value,
-  tone = 'good',
+  tone = 'normal',
 }: {
-  icon: typeof CpuIcon
   label: string
   value: string
-  tone?: 'good' | 'warn' | 'hot' | 'muted'
+  tone?: 'normal' | 'warn' | 'critical' | 'muted' | 'accent'
 }) {
   return (
-    <div
+    <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm backdrop-blur-md',
-        tone === 'good' &&
-          'border-emerald-400/25 bg-emerald-500/10 text-emerald-100',
-        tone === 'warn' && 'border-amber-400/30 bg-amber-500/10 text-amber-100',
-        tone === 'hot' && 'border-red-400/30 bg-red-500/10 text-red-100',
-        tone === 'muted' && 'border-white/10 bg-white/5 text-primary-100/75',
+        'inline-flex min-w-0 items-baseline gap-1.5 whitespace-nowrap',
+        tone === 'normal' && 'text-[var(--theme-text)]/80',
+        tone === 'warn' && 'text-amber-300/90',
+        tone === 'critical' && 'text-red-300/95',
+        tone === 'muted' && 'text-[var(--theme-muted)]',
+        tone === 'accent' && 'text-[var(--theme-accent)]',
       )}
     >
-      <HugeiconsIcon icon={icon} size={13} strokeWidth={1.7} />
-      <span className="uppercase tracking-[0.12em] opacity-60">{label}</span>
-      <span className="tabular-nums">{value}</span>
-    </div>
+      <span className="text-[9px] font-medium uppercase tracking-[0.16em] text-[var(--theme-muted)]">
+        {label}
+      </span>
+      <span className="truncate font-medium tabular-nums">{value}</span>
+    </span>
+  )
+}
+
+function Separator() {
+  return <span className="h-3 w-px shrink-0 bg-[var(--theme-border)]" aria-hidden />
+}
+
+function StatusDot({ tone }: { tone: 'ok' | 'warn' | 'critical' | 'muted' }) {
+  return (
+    <span
+      className={cn(
+        'inline-block size-1.5 rounded-full',
+        tone === 'ok' && 'bg-[var(--theme-accent)]',
+        tone === 'warn' && 'bg-amber-300/90',
+        tone === 'critical' && 'bg-red-300/95',
+        tone === 'muted' && 'bg-[var(--theme-muted)]',
+      )}
+      aria-hidden
+    />
   )
 }
 
@@ -101,49 +120,57 @@ export function SystemMetricsFooter({ leftOffsetPx = 0 }: { leftOffsetPx?: numbe
   })
 
   const hermesHealthy = data?.hermes.status === 'connected' || data?.hermes.status === 'enhanced'
+  const hermesTone = hermesHealthy ? 'accent' : data?.hermes.status === 'disconnected' ? 'critical' : 'warn'
+  const hermesDotTone = hermesHealthy ? 'ok' : data?.hermes.status === 'disconnected' ? 'critical' : 'warn'
 
   return (
     <footer
-      className="fixed bottom-0 right-0 z-40 hidden h-8 items-center justify-center border-t border-l border-white/10 bg-neutral-950/85 px-4 text-xs text-primary-100 shadow-[0_-8px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl md:flex"
+      className="fixed bottom-0 right-0 z-40 hidden h-7 items-center border-t border-[var(--theme-border)] bg-[var(--theme-card)] px-4 text-[11px] leading-none text-[var(--theme-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:flex"
       data-testid="system-metrics-footer"
       aria-label="System metrics footer"
       style={{ left: leftOffsetPx }}
     >
-      <div className="flex max-w-full items-center gap-2 overflow-hidden">
+      <div className="flex max-w-full items-center justify-center gap-3 overflow-hidden opacity-85">
         {data ? (
           <>
-            <MetricPill
-              icon={CpuIcon}
+            <MetricItem
               label="CPU"
-              value={`${data.cpu.loadPercent}% (${data.cpu.loadAverage1m}/${data.cpu.cores})`}
+              value={`${data.cpu.loadPercent}%`}
               tone={metricTone(data.cpu.loadPercent)}
             />
-            <MetricPill
-              icon={DatabaseIcon}
+            <Separator />
+            <MetricItem
               label="RAM"
-              value={`${data.memory.usedPercent}% ${formatBytes(data.memory.usedBytes)}/${formatBytes(data.memory.totalBytes)}`}
+              value={`${formatBytes(data.memory.usedBytes)} / ${formatBytes(data.memory.totalBytes)}`}
               tone={metricTone(data.memory.usedPercent)}
             />
-            <MetricPill
-              icon={HardDriveIcon}
+            <Separator />
+            <MetricItem
               label="Disk"
-              value={`${data.disk.usedPercent}% ${formatBytes(data.disk.usedBytes)}/${formatBytes(data.disk.totalBytes)}`}
+              value={`${data.disk.usedPercent}%`}
               tone={metricTone(data.disk.usedPercent)}
             />
-            <MetricPill
-              icon={hermesHealthy ? CheckmarkCircle02Icon : WifiDisconnected02Icon}
-              label="Hermes"
-              value={data.hermes.status}
-              tone={hermesHealthy ? 'good' : 'warn'}
+            <Separator />
+            <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+              <StatusDot tone={hermesDotTone} />
+              <MetricItem label="Hermes" value={data.hermes.status} tone={hermesTone} />
+            </span>
+            <Separator />
+            <MetricItem
+              label="Updated"
+              value={formatCheckedAt(data.checkedAt)}
+              tone="muted"
             />
           </>
         ) : (
-          <MetricPill
-            icon={isError ? WifiDisconnected02Icon : CpuIcon}
-            label="Metrics"
-            value={isError ? 'unavailable' : 'loading'}
-            tone={isError ? 'warn' : 'muted'}
-          />
+          <span className="inline-flex items-center gap-2 whitespace-nowrap text-[var(--theme-muted)]">
+            <StatusDot tone={isError ? 'warn' : 'muted'} />
+            <MetricItem
+              label="Metrics"
+              value={isError ? 'unavailable' : 'loading'}
+              tone={isError ? 'warn' : 'muted'}
+            />
+          </span>
         )}
       </div>
     </footer>
