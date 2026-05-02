@@ -39,7 +39,7 @@ import { MobilePageHeader } from '@/components/mobile-page-header'
 import { MobileTerminalInput } from '@/components/terminal/mobile-terminal-input'
 import { ClaudeReconnectBanner } from '@/components/claude-reconnect-banner'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
-// System metrics footer removed — not used in Hermes Workspace
+import { SystemMetricsFooter } from '@/components/system-metrics-footer'
 import { CommandPalette } from '@/components/command-palette'
 import { useSettings } from '@/hooks/use-settings'
 // ActivityTicker moved to dashboard-only (too noisy for global header)
@@ -393,7 +393,9 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
       </div>
 
       <MobileHamburgerMenu />
-      {/* System metrics footer removed */}
+      {!isMobile && !isOnChatRoute && settings.showSystemMetricsFooter ? (
+        <SystemMetricsFooter />
+      ) : null}
       <CommandPalette pathname={pathname} sessions={sessions} />
     </>
   )
