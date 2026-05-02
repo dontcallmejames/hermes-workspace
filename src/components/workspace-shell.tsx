@@ -394,7 +394,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
       <MobileHamburgerMenu />
       {!isMobile && !isOnChatRoute && settings.showSystemMetricsFooter ? (
-        <SystemMetricsFooter />
+        <SystemMetricsFooter leftOffsetPx={sidebarCollapsed ? 48 : 300} />
       ) : null}
       <CommandPalette pathname={pathname} sessions={sessions} />
     </>

@@ -92,23 +92,24 @@ function MetricPill({
   )
 }
 
-export function SystemMetricsFooter() {
-  const { data, isError, isFetching } = useQuery({
+export function SystemMetricsFooter({ leftOffsetPx = 0 }: { leftOffsetPx?: number }) {
+  const { data, isError } = useQuery({
     queryKey: ['system-metrics-footer'],
     queryFn: fetchSystemMetrics,
-    refetchInterval: 5_000,
-    staleTime: 4_000,
+    refetchInterval: 15_000,
+    staleTime: 14_000,
   })
 
   const hermesHealthy = data?.hermes.status === 'connected' || data?.hermes.status === 'enhanced'
 
   return (
     <footer
-      className="fixed inset-x-0 bottom-0 z-40 hidden h-8 items-center justify-center border-t border-white/10 bg-neutral-950/85 px-4 text-xs text-primary-100 shadow-[0_-8px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl md:flex"
+      className="fixed bottom-0 right-0 z-40 hidden h-8 items-center justify-center border-t border-l border-white/10 bg-neutral-950/85 px-4 text-xs text-primary-100 shadow-[0_-8px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl md:flex"
       data-testid="system-metrics-footer"
       aria-label="System metrics footer"
+      style={{ left: leftOffsetPx }}
     >
-      <div className="flex max-w-full items-center gap-2 overflow-x-auto">
+      <div className="flex max-w-full items-center gap-2 overflow-hidden">
         {data ? (
           <>
             <MetricPill
@@ -144,11 +145,6 @@ export function SystemMetricsFooter() {
             tone={isError ? 'warn' : 'muted'}
           />
         )}
-        {isFetching && data ? (
-          <span className="text-[10px] uppercase tracking-[0.16em] text-primary-100/35">
-            refreshing
-          </span>
-        ) : null}
       </div>
     </footer>
   )
